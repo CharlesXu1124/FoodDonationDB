@@ -6,6 +6,7 @@ import Toast from 'react-native-toast-message';
 import { Feather } from '@expo/vector-icons';
 import styles from './styles';
 import { Foundation } from '@expo/vector-icons'; 
+import {} from './api';
 
 const StoreDetail = ({ route, navigation }) => {
     console.log(route, navigation)

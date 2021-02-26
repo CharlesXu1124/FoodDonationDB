@@ -1,11 +1,8 @@
 import { StyleSheet, Text, View } from 'react-native';
 import React, {
-  Component,
-  useState,
   useEffect,
   useMemo,
   useReducer,
-  createContext
 } from 'react';
 import {
   SplashScreen,
@@ -24,6 +21,7 @@ import { createStackNavigator } from '@react-navigation/stack';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import AppContext from './AppContext';
 import Toast from 'react-native-toast-message';
+import {SIGN_UP, LOG_IN} from './api'
 
 
 
@@ -78,24 +76,30 @@ export default function App() {
 
   const authContext = useMemo(
     () => ({
-      signIn: async data => {
+      signIn: async ({username,password}) => {
         // In a production app, we need to send some data (usually username, password) to server and get a token
         // We will also need to handle errors if sign in failed
         // After getting token, we need to persist the token using `AsyncStorage`
         // In the example, we'll use a dummy token
         //TODO: API: sign in
+        userData = await SIGN_UP(username,password)
 
         AsyncStorage.setItem('userData', data)
 
         dispatch({ type: 'SIGN_IN', token: data });
       },
-      signOut: () => dispatch({ type: 'SIGN_OUT' }),
-      signUp: async data => {
+      signOut: () => {
+        AsyncStorage.setItem('userData', null)
+        dispatch({ type: 'SIGN_OUT' })
+      },
+      signUp: async ({username,password})  => {
         // In a production app, we need to send user data to server and get a token
         // We will also need to handle errors if sign up failed
         // After getting token, we need to persist the token using `AsyncStorage`
         // In the example, we'll use a dummy token
         //TODO: API: sign up
+        userData = await SIGN_UP(username,password)
+
         AsyncStorage.setItem('userData', data)
 
         dispatch({ type: 'SIGN_IN', token: 'dummy-auth-token' });
@@ -130,12 +134,3 @@ export default function App() {
     </AppContext.Provider>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
