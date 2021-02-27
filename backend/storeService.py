@@ -272,7 +272,7 @@ def searchRestaurantByLatLng():
 
 
     list_of_restaurants = []
-    query_string = "select rName, rCuisine, rPhone, rAddress, rRating, rLatitude, rLongitude from [dbo].[Restaurant];"
+    query_string = "select rName, rCuisine, rPhone, rAddress, rRating, rLatitude, rLongitude, cuisine_qty from [dbo].[Restaurant];"
     print("Executing query: %s" % query_string)
     cursor.execute(query_string)
     row = cursor.fetchone()
@@ -293,11 +293,12 @@ def searchRestaurantByLatLng():
                 'rating': str(row[4]),
                 'latitude': float(row[5]),
                 'longitude': float(row[6]),
+                'cuisine_qty':int(row[7])
                 'distance': distance
             })
         row = cursor.fetchone()
 
-    return (jsonify([]))
+    return (jsonify(list_of_restaurants))
 
 
 if __name__ == "__main__":
