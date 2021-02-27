@@ -57,14 +57,14 @@ def login():
 
     print("Executing query..........",password,email)
 
-    query_string = "select credential,cust_id from [dbo].[Customers] where [dbo].[Customers].cust_email='{0}'".format(email)
+    query_string = "select credential,cust_id,cus_name from [dbo].[Customers] where [dbo].[Customers].cust_email='{0}'".format(email)
     cursor.execute(query_string)
     row = cursor.fetchone()
 
-    credential,cus_id = str(row[0]),str(row[1])
+    credential,cus_id,cus_name = str(row[0]),str(row[1]),str(row[2])
 
     if credential == password:
-        return jsonify({'cus_id':cus_id,'success':True})
+        return jsonify({'cus_id':cus_id,'success':True,'cus_name':cus_name})
 
         # print("Login successful!!!")
         # return "Login successful!!!"
@@ -116,7 +116,7 @@ def signup():
                      VALUES ('%s', '%s', '%s', '%s', '%s');" % (cust_id, cust_name, cust_email, cust_phone, credential))
             # cursor.execute("SELECT * FROM [dbo].[Customers];")
             conn.commit()
-    return jsonify({'cus_id':cust_id,'success':True})
+    return jsonify({'cus_id':cust_id,'success':True,'cus_name':cust_name})
             
     # return "account created successfully"
 
