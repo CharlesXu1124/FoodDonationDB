@@ -67,11 +67,18 @@ def login():
         return "Login failed, check username and password"
 
 
+'''
+function for handling user signup request
+'''
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
     data = request.data
     loaded_json = json.loads(data)
-    cust_id = loaded_json["cust_id"]
+    # cust_id = loaded_json["cust_id"]
+
+    # randomly generate customer ID during signup
+    cust_id = random_string_lower_case(64)
+
     cust_name = loaded_json["cust_name"]
     cust_email = loaded_json["cust_email"]
     cust_phone = loaded_json["cust_phone"]
@@ -101,12 +108,7 @@ def signup():
                      VALUES ('%s', '%s', '%s', '%s', '%s');" % (cust_id, cust_name, cust_email, cust_phone, credential))
             # cursor.execute("SELECT * FROM [dbo].[Customers];")
             conn.commit()
-            # row = cursor.fetchone()
-
-            while row is not None:
-                result_from_database.append(row)
-                row = cursor.fetchone()
-            print(result_from_database)
+            
     return "account created successfully"
 
 
