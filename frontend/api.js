@@ -34,15 +34,18 @@ const SEARCH_STORES =async (lat,lng)=>{
             lat,
             lng
     }})
+    return data
 }
 
-const PLACE_ORDER =async (order_quantity,cust_id,rID)=>{
+const PLACE_ORDER =async (order_quantity, cust_id, rID)=>{
 
     const {data} = await instance.post('placeOrder',{
         order_quantity,
         cust_id,
         rID
     })
+
+    return data   
 }
 
 

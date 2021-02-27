@@ -61,6 +61,10 @@ export default function App() {
       isLoading: true,
       isSignout: false,
       userToken: null,
+      location:{lat: 59.95,
+        lng: 30.33}
+      //TODO: device location
+
     }
   );
 
