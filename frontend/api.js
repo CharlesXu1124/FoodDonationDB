@@ -35,6 +35,17 @@ const SEARCH_STORES = async (latitude, longitude, radius) => {
         radius
     })
     return data
+    // .map((item)=>({
+    //     'id':item['rID'],
+    //     'lat':item['latitude'],
+    //     'lng':item['longitude'],
+    //     'name':item['rName'],
+    //     'cuisine':item['Cuisine'],
+    //     'phone':item['phone'],
+    //     'rating': item['rating'],
+    //     'cuisine_qty':item['cuisine_qty'],
+    //     'distance': item['distance'],
+    // }))
 }
 
 const PLACE_ORDER =async (order_quantity, cust_id, rID)=>{

@@ -20,7 +20,6 @@ const StoreDetail = ({ route, navigation }) => {
         id,
         cuisine,
         phone,
-        address,
         rating,
         quantity } } = route
     const placeOrder = (quantity) => {
