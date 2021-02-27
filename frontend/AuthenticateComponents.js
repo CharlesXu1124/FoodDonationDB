@@ -1,14 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect,useContext } from 'react';
 import {  View, TextInput, Text, TouchableOpacity} from 'react-native';
 import AppContext from './AppContext';
 import Toast from 'react-native-toast-message';
 import styles from './styles';
 
 const SignInScreen = (props) => {
-    const [email, setEmail] = React.useState('');
-    const [password, setPassword] = React.useState('');
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
 
-    const { signIn } = React.useContext(AppContext);
+    const { authContext:{signIn} } = useContext(AppContext);
 
     return (
         <View 
@@ -46,12 +46,12 @@ const SignInScreen = (props) => {
 }
 
 const SignUpScreen = () => {
-    const [username, setUsername] = React.useState('');
-    const [password, setPassword] = React.useState('');
-    const [phone, setPhone] = React.useState('');
-    const [email, setEmail] = React.useState('');
+    const [username, setUsername] = useState('');
+    const [password, setPassword] = useState('');
+    const [phone, setPhone] = useState('');
+    const [email, setEmail] = useState('');
 
-    const { signUp } = React.useContext(AppContext);
+    const { authContext:{signUp }} = React.useContext(AppContext)
 
     return (
         <View

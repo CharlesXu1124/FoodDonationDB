@@ -23,8 +23,12 @@ import pyodbc
 # cursor = conn.cursor()
 
 app = Flask(__name__)
-cors = CORS(app, resources={r"/signup": {"origins": "*"},
-                r"/login": {"origins": "*"}})
+cors = CORS(app, resources={
+                r"/signup": {"origins": "*"},
+                r"/login": {"origins": "*"},
+                r"/searchRestaurant": {"origins": "*"},
+                r"/placeOrder": {"origins": "*"},
+                })
 app.config['CORS_HEADERS'] = 'Content-Type'
 
 
@@ -57,14 +61,14 @@ def login():
 
     print("Executing query..........",password,email)
 
-    query_string = "select credential,cust_id from [dbo].[Customers] where [dbo].[Customers].cust_email='{0}'".format(email)
+    query_string = "select credential,cust_id,cus_name from [dbo].[Customers] where [dbo].[Customers].cust_email='{0}'".format(email)
     cursor.execute(query_string)
     row = cursor.fetchone()
 
-    credential,cus_id = str(row[0]),str(row[1])
+    credential,cus_id,cus_name = str(row[0]),str(row[1]),str(row[2])
 
     if credential == password:
-        return jsonify({'cus_id':cus_id,'success':True})
+        return jsonify({'cus_id':cus_id,'success':True,'cus_name':cus_name})
 
         # print("Login successful!!!")
         # return "Login successful!!!"
@@ -92,41 +96,41 @@ def signup():
     print("Executing query..........",cust_name,cust_email,cust_phone,credential,cust_id)
 
 
-    drivers = [item for item in pyodbc.drivers()]
-    driver = drivers[-1]
-    print("driver:{}".format(driver))
+    # drivers = [item for item in pyodbc.drivers()]
+    # driver = drivers[-1]
+    # print("driver:{}".format(driver))
 
-    server = 'ubuntu1.database.windows.net'
-    database = 'DB1'
-    username = 'admin1'
-    password = 'Pwned_2023'
-    driver = '{ODBC Driver 17 for SQL Server}'
-    print(response.json())
+    # server = 'ubuntu1.database.windows.net'
+    # database = 'DB1'
+    # username = 'admin1'
+    # password = 'Pwned_2023'
+    # driver = '{ODBC Driver 17 for SQL Server}'
+    # print(response.json())
 
-    result_from_database = []
+    # result_from_database = []
 
-    with pyodbc.connect(
-            'DRIVER=' + driver + ';SERVER=' + server + ';\
-                PORT=1433;DATABASE=' + database + ';\
-                    UID=' + username + ';\
-                        PWD=' + password) as conn:
-        with conn.cursor() as cursor:
-            cursor.execute("INSERT INTO [dbo].[Customers] \
-                 (cust_id, cust_name, cust_email, cust_phone, credential) \
-                     VALUES ('%s', '%s', '%s', '%s', '%s');" % (cust_id, cust_name, cust_email, cust_phone, credential))
-            # cursor.execute("SELECT * FROM [dbo].[Customers];")
-            conn.commit()
-    return jsonify({'cus_id':cust_id,'success':True})
+    # with pyodbc.connect(
+    #         'DRIVER=' + driver + ';SERVER=' + server + ';\
+    #             PORT=1433;DATABASE=' + database + ';\
+    #                 UID=' + username + ';\
+    #                     PWD=' + password) as conn:
+    #     with conn.cursor() as cursor:
+    #         cursor.execute("INSERT INTO [dbo].[Customers] \
+    #              (cust_id, cust_name, cust_email, cust_phone, credential) \
+    #                  VALUES ('%s', '%s', '%s', '%s', '%s');" % (cust_id, cust_name, cust_email, cust_phone, credential))
+    #         # cursor.execute("SELECT * FROM [dbo].[Customers];")
+    #         conn.commit()
+    return jsonify({'cus_id':cust_id,'success':True,'cus_name':cust_name})
             
     # return "account created successfully"
 
-
-@app.route('/searchRestaurant', methods=['GET', 'POST'])
+@cross_origin(origin='*',headers=['Content-Type','Authorization'])
+@app.route('/searchRestaurant', methods=['GET'])
 def searchRestaurant():
     zipcode = request.args.get('zipcode')
 
     list_of_restaurants = []
-    query_string = "select rName, rCuisine, rPhone, rAddress, rRating  from [dbo].[Restaurant] where rAddress LIKE '%" + zipcode + "%'"
+    query_string = "select rID, rName, rCuisine, rPhone, rAddress, rRating, cuisine_qty  from [dbo].[Restaurant] where rAddress LIKE '%" + zipcode + "%'"
     print(query_string)
     cursor.execute(query_string)
     row = cursor.fetchone()
@@ -139,24 +143,28 @@ def searchRestaurant():
     results = {}
     final_results = []
     for index, tuple in enumerate(list_of_restaurants):
-        results['rName'] = tuple[0]
-        results['Cuisine'] = tuple[1]
-        results['phone'] = tuple[2]
-        results['Address'] = tuple[3]
-        results['rating'] = str(tuple[4])
+        results['rID'] = tuple[0]
+        results['rName'] = tuple[1]
+        results['Cuisine'] = tuple[2]
+        results['phone'] = tuple[3]
+        results['Address'] = tuple[4]
+        results['rating'] = str(tuple[5])
+        results['quantity'] = str(tuple[6])
         final_results.append(results)
 
-    return (str(final_results))
+    return (jsonify(final_results))
 
 
-@app.route('/placeOrder', methods=['GET', 'POST'])
+@cross_origin(origin='*',headers=['Content-Type','Authorization'])
+@app.route('/placeOrder', methods=[ 'POST'])
 def placeOrder():
-    data = request.data
-    loaded_json = json.loads(data)
     order_id = random_string(64)
-    order_quantity = loaded_json["order_quantity"]
-    cust_id = loaded_json["cust_id"]
-    rID = loaded_json["rID"]
+    order_quantity = request.json["order_quantity"]
+    cust_id = request.json["cust_id"]
+    rID = request.json["rID"]
+
+    print("Placing order",order_id,order_quantity,cust_id,rID)
+
 
     drivers = [item for item in pyodbc.drivers()]
     driver = drivers[-1]
@@ -213,7 +221,7 @@ def placeOrder():
             # cursor.execute("SELECT * FROM [dbo].[Customers];")
             conn.commit()
 
-    return "Order placed, thank you for choosing us!"
+    return jsonify({'success':True})
 
 
 if __name__ == "__main__":

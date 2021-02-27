@@ -29,7 +29,7 @@ const SIGN_UP =async (cust_name,credential,cust_email,cust_phone)=>{
 }
 
 const SEARCH_STORES =async (lat,lng)=>{
-    const response = await instance.get('searchRestaurant',{
+    const {data} = await instance.get('searchRestaurant',{
         params:{
             lat,
             lng
