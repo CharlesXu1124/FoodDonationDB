@@ -7,22 +7,24 @@ import string
 import datetime
 import json
 from flask import Flask
-from flask import request
-
+from flask import request,jsonify
+from flask_cors import CORS, cross_origin
 import pyodbc
 
-drivers = [item for item in pyodbc.drivers()]
-driver = drivers[-1]
-server = 'ubuntu1.database.windows.net'
-database = 'DB1'
-username = 'admin1'
-password = 'Pwned_2023'
-driver = '{ODBC Driver 17 for SQL Server}'
-conn = pyodbc.connect(
-    'DRIVER=' + driver + ';SERVER=' + server + ';PORT=1433;DATABASE=' + database + ';UID=' + username + ';PWD=' + password)
-cursor = conn.cursor()
+# drivers = [item for item in pyodbc.drivers()]
+# driver = drivers[-1]
+# server = 'ubuntu1.database.windows.net'
+# database = 'DB1'
+# username = 'admin1'
+# password = 'Pwned_2023'
+# driver = '{ODBC Driver 17 for SQL Server}'
+# conn = pyodbc.connect(
+#     'DRIVER=' + driver + ';SERVER=' + server + ';PORT=1433;DATABASE=' + database + ';UID=' + username + ';PWD=' + password)
+# cursor = conn.cursor()
 
 app = Flask(__name__)
+cors = CORS(app, resources={r"/signup": {"origins": "*"}})
+app.config['CORS_HEADERS'] = 'Content-Type'
 
 
 # helper function for generating random hashes
@@ -66,48 +68,49 @@ def login():
     else:
         return "Login failed, check username and password"
 
-
-@app.route('/signup', methods=['GET', 'POST'])
+@app.route('/signup', methods=['GET', 'POST','OPTIONS'])
+@cross_origin(origin='*',headers=['Content-Type','Authorization'])
 def signup():
-    data = request.data
-    loaded_json = json.loads(data)
-    cust_id = loaded_json["cust_id"]
-    cust_name = loaded_json["cust_name"]
-    cust_email = loaded_json["cust_email"]
-    cust_phone = loaded_json["cust_phone"]
-    credential = loaded_json["credential"]
+    print(request.data)
+    # data = request.data
+    # loaded_json = json.loads(data)
+    # print(loaded_json)
+    # cust_name = loaded_json["cust_name"]
+    # cust_email = loaded_json["cust_email"]
+    # cust_phone = loaded_json["cust_phone"]
+    # credential = loaded_json["credential"]
 
-    drivers = [item for item in pyodbc.drivers()]
-    driver = drivers[-1]
-    print("driver:{}".format(driver))
+    # drivers = [item for item in pyodbc.drivers()]
+    # driver = drivers[-1]
+    # print("driver:{}".format(driver))
 
-    server = 'ubuntu1.database.windows.net'
-    database = 'DB1'
-    username = 'admin1'
-    password = 'Pwned_2023'
-    driver = '{ODBC Driver 17 for SQL Server}'
-    # print(response.json())
+    # server = 'ubuntu1.database.windows.net'
+    # database = 'DB1'
+    # username = 'admin1'
+    # password = 'Pwned_2023'
+    # driver = '{ODBC Driver 17 for SQL Server}'
+    # # print(response.json())
 
-    result_from_database = []
+    # result_from_database = []
 
-    with pyodbc.connect(
-            'DRIVER=' + driver + ';SERVER=' + server + ';\
-                PORT=1433;DATABASE=' + database + ';\
-                    UID=' + username + ';\
-                        PWD=' + password) as conn:
-        with conn.cursor() as cursor:
-            cursor.execute("INSERT INTO [dbo].[Customers] \
-                 (cust_id, cust_name, cust_email, cust_phone, credential) \
-                     VALUES ('%s', '%s', '%s', '%s', '%s');" % (cust_id, cust_name, cust_email, cust_phone, credential))
-            # cursor.execute("SELECT * FROM [dbo].[Customers];")
-            conn.commit()
-            # row = cursor.fetchone()
+    # with pyodbc.connect(
+    #         'DRIVER=' + driver + ';SERVER=' + server + ';\
+    #             PORT=1433;DATABASE=' + database + ';\
+    #                 UID=' + username + ';\
+    #                     PWD=' + password) as conn:
+    #     with conn.cursor() as cursor:
+    #         cursor.execute("INSERT INTO [dbo].[Customers] \
+    #              (cust_id, cust_name, cust_email, cust_phone, credential) \
+    #                  VALUES ('%s', '%s', '%s', '%s', '%s');" % (cust_id, cust_name, cust_email, cust_phone, credential))
+    #         # cursor.execute("SELECT * FROM [dbo].[Customers];")
+    #         conn.commit()
+    #         # row = cursor.fetchone()
 
-            while row is not None:
-                result_from_database.append(row)
-                row = cursor.fetchone()
-            print(result_from_database)
-    return "account created successfully"
+    #         while row is not None:
+    #             result_from_database.append(row)
+    #             row = cursor.fetchone()
+    #         print(result_from_database)
+    return jsonify({'cus_id':"1231235423"})
 
 
 @app.route('/searchRestaurant', methods=['GET', 'POST'])

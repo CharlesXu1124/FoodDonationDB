@@ -99,7 +99,7 @@ export default function App() {
         // In the example, we'll use a dummy token
         //TODO: API: sign up
         userData = await SIGN_UP(username,password)
-
+        
         AsyncStorage.setItem('userData', data)
 
         dispatch({ type: 'SIGN_IN', token: 'dummy-auth-token' });

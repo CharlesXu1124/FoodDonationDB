@@ -1,10 +1,11 @@
 
 const axios = require('axios');
-const BASE_URL ="http://13.66.196.147:5000/"
+// const BASE_URL ="http://13.66.196.147:5000/"
+const BASE_URL ="http://0.0.0.0:5000/"
 
 const instance = axios.create({
     baseURL: BASE_URL,
-    timeout: 1000
+    timeout: 20000
   });
 
 const LOG_IN =async (email,password)=>{

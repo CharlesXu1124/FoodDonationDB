@@ -48,6 +48,8 @@ const SignInScreen = (props) => {
 const SignUpScreen = () => {
     const [username, setUsername] = React.useState('');
     const [password, setPassword] = React.useState('');
+    const [phone, setPhone] = React.useState('');
+    const [email, setEmail] = React.useState('');
     const [repeatpassword, setRepeatPassword] = React.useState('');
 
     const { signUp } = React.useContext(AppContext);
@@ -66,24 +68,32 @@ const SignUpScreen = () => {
             <View style={styles.inputView}>
                 <TextInput
                     style={styles.TextInput}
+                    placeholder="Email"
+                    value={email}
+                    onChangeText={setEmail}
+                />
+            </View>
+            <View style={styles.inputView}>
+                <TextInput
+                    style={styles.TextInput}
+                    placeholder="Phone"
+                    value={phone}
+                    onChangeText={setPhone}
+                />
+            </View>
+            <View style={styles.inputView}>
+                <TextInput
+                    style={styles.TextInput}
                     placeholder="Password"
                     value={password}
                     onChangeText={setPassword}
                     secureTextEntry
                 />
             </View>
-            <View style={styles.inputView}>
-                <TextInput
-                    style={styles.TextInput}
-                    placeholder="Repeat Password"
-                    value={repeatpassword}
-                    onChangeText={setRepeatPassword}
-                    secureTextEntry
-                />
-            </View>
+            
 
             <TouchableOpacity
-                onPress={() => signUp({ username, password })}
+                onPress={() => signUp({ username, password, })}
                 style={styles.loginBtn}>
                 <Text style={styles.loginText}>SIGN UP</Text>
             </TouchableOpacity>
