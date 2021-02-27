@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect,useContext } from 'react';
 import { Button, View, TextInput, Text, Pressable, Touchable, StyleSheet, TouchableOpacity, FlatList } from 'react-native';
 import GoogleMapReact from 'google-map-react';
 import AppContext from './AppContext';
@@ -6,49 +6,57 @@ import Toast from 'react-native-toast-message';
 import { Feather } from '@expo/vector-icons';
 import styles from './styles';
 import { Foundation } from '@expo/vector-icons'; 
-import {} from './api';
+import {PLACE_ORDER} from './api';
 
 const StoreDetail = ({ route, navigation }) => {
     console.log(route, navigation)
-    //TODO: API: store detail? or just use the data from list
+    const { state } = useContext(AppContext);
+    console.log(state);
+    const {userToken:{cus_id,cus_name}} = state
+    const { params: { name,id,cuisine,phone,address,rating,quantity } } = route
+    const placeOrder = (quantity) => {
+        //API: place order
+        PLACE_ORDER(quantity,cus_id,id)
+        .then(
+            ()=>
+            Toast.show({
+                text1: 'Hello',
+                text2: 'This is some something 👋'
+            })
+        )
 
-    const { params: { name } } = route
-    return (
-        <View style={styles.container}>
-            <Text>
-                Hey {name}
-            </Text>
-            <TouchableOpacity
-                onPress={() => navigation.navigate('Place Order')}
-                style={styles.loginBtn}>
-                <Text style={styles.loginText}>Place Order</Text>
-            </TouchableOpacity>
-        </View>
-    )
-}
-
-const PlaceOrder = ({ route, navigation }) => {
-    console.log(route, navigation)
-    //TODO: API: place order
-    // const { params: { store } } = route
-
-    const placeOrder = () => {
-        Toast.show({
-            text1: 'Hello',
-            text2: 'This is some something 👋'
-        });
-        navigation.goBack()
     }
 
     return (
-        <View >
-            <Pressable
-                onPress={placeOrder}>
+        <View style={styles.container}>
+            <View>
                 <Text>
-                    Place Order
-            </Text>
-
-            </Pressable>
+                {name}    
+                </Text>
+            </View>
+            <View>
+                <Text>
+                Cuisine: {cuisine}    
+                </Text>
+                <Text>
+                {rating}    
+                </Text>
+            </View>
+            <View>
+                <Text>
+                Phone Number: {phone}    
+                </Text>
+            </View>
+            <View>
+                <Text>
+                Remaining quantity: {quantity}    
+                </Text>
+            </View>
+            <TouchableOpacity
+                onPress={() => placeOrder(1)}
+                style={styles.loginBtn}>
+                <Text style={styles.loginText}>Place Order</Text>
+            </TouchableOpacity>
         </View>
     )
 }
@@ -120,7 +128,6 @@ const StoreListView = (props) => {
         }
         loadData()
     }, [])
-
 
     const StoreItem = ({ lat, lng, id, name, }) => (<TouchableOpacity
         style={styles.listItem}
@@ -231,9 +238,9 @@ const StoreMapView = (props) => {
 
 const SplashScreen = (props) => {
     return (
-        <View >
+        <View style={styles.container}>
             <Text>
-                Find Food!
+                Find Donation!
             </Text>
         </View>
     )
@@ -246,5 +253,4 @@ export {
     StoreListView,
     StoreMapView,
     SplashScreen,
-    PlaceOrder
 }

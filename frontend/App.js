@@ -8,8 +8,7 @@ import {
   SplashScreen,
   StoreListView,
   StoreMapView,
-  StoreDetail,
-  PlaceOrder
+  StoreDetail
 } from './Components';
 import{
   SignInScreen,
@@ -72,7 +71,7 @@ export default function App() {
         userData = await AsyncStorage.getItem('userData')
       } catch (e) {
       }
-      dispatch({ type: 'RESTORE_TOKEN', token: userData });
+      dispatch({ type: 'RESTORE_TOKEN', token: JSON.parse(userData) });
     }
     setTimeout(fetchUser, 1000)
   }, [])
@@ -81,11 +80,7 @@ export default function App() {
     () => ({
       
       signIn: async ({ email, password }) => {
-        // In a production app, we need to send some data (usually username, password) to server and get a token
-        // We will also need to handle errors if sign in failed
-        // After getting token, we need to persist the token using `AsyncStorage`
-        // In the example, we'll use a dummy token
-        //TODO: API: sign in
+        // API: sign in
         const userData = await SIGN_IN(email, password)
         console.log(userData)
 
@@ -98,11 +93,8 @@ export default function App() {
         dispatch({ type: 'SIGN_OUT' })
       },
       signUp: async ({ username, password,email,phone })  => {
-        // In a production app, we need to send user data to server and get a token
-        // We will also need to handle errors if sign up failed
-        // After getting token, we need to persist the token using `AsyncStorage`
-        // In the example, we'll use a dummy token
-        //TODO: API: sign up
+        
+        // API: sign up
         const userData = await SIGN_UP(username, password,email,phone)
         console.log(userData)
         
@@ -119,14 +111,13 @@ export default function App() {
     return <SplashScreen />
   }
   return (
-    <AppContext.Provider value={authContext}>
+    <AppContext.Provider value={{authContext,state}}>
       <NavigationContainer>
         {state.userToken ?
           <Stack.Navigator>
             <Stack.Screen name="Home" component={StoreMapView} />
             <Stack.Screen name="Store List" component={StoreListView} />
             <Stack.Screen name="Store Detail" component={StoreDetail} />
-            <Stack.Screen name="Place Order" component={PlaceOrder} />
 
           </Stack.Navigator>
           :
