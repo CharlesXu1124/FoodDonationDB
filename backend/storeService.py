@@ -197,6 +197,9 @@ def placeOrder():
     username = 'admin1'
     password = 'Pwned_2023'
     driver = '{ODBC Driver 17 for SQL Server}'
+    
+    if order_quantity < 1:
+        return jsonify({'success': False, 'info': 'invalid transaction'})
 
     with pyodbc.connect(
             'DRIVER=' + driver + ';SERVER=' + server + ';\
@@ -213,7 +216,7 @@ def placeOrder():
                 print(row)
 
             if row < order_quantity:
-                return "Transaction failed: not enough food"
+                return jsonify({'success': False, 'info': 'not enough food'})
 
     with pyodbc.connect(
             'DRIVER=' + driver + ';SERVER=' + server + ';\
