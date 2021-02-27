@@ -5,7 +5,7 @@ import Toast from 'react-native-toast-message';
 import styles from './styles';
 
 const SignInScreen = (props) => {
-    const [username, setUsername] = React.useState('');
+    const [email, setEmail] = React.useState('');
     const [password, setPassword] = React.useState('');
 
     const { signIn } = React.useContext(AppContext);
@@ -17,9 +17,9 @@ const SignInScreen = (props) => {
             <View style={styles.inputView}>
                 <TextInput
                     style={styles.TextInput}
-                    placeholder="Username"
-                    value={username}
-                    onChangeText={setUsername}
+                    placeholder="Email"
+                    value={email}
+                    onChangeText={setEmail}
                 />
             </View>
             <View style={styles.inputView}>
@@ -37,7 +37,7 @@ const SignInScreen = (props) => {
             </TouchableOpacity>
 
             <TouchableOpacity 
-            onPress={() => signIn({ username, password })}
+            onPress={() => signIn({ email, password })}
             style={styles.loginBtn}>
                 <Text style={styles.loginText}>LOGIN</Text>
             </TouchableOpacity>
@@ -48,7 +48,8 @@ const SignInScreen = (props) => {
 const SignUpScreen = () => {
     const [username, setUsername] = React.useState('');
     const [password, setPassword] = React.useState('');
-    const [repeatpassword, setRepeatPassword] = React.useState('');
+    const [phone, setPhone] = React.useState('');
+    const [email, setEmail] = React.useState('');
 
     const { signUp } = React.useContext(AppContext);
 
@@ -66,24 +67,32 @@ const SignUpScreen = () => {
             <View style={styles.inputView}>
                 <TextInput
                     style={styles.TextInput}
+                    placeholder="Email"
+                    value={email}
+                    onChangeText={setEmail}
+                />
+            </View>
+            <View style={styles.inputView}>
+                <TextInput
+                    style={styles.TextInput}
+                    placeholder="Phone"
+                    value={phone}
+                    onChangeText={setPhone}
+                />
+            </View>
+            <View style={styles.inputView}>
+                <TextInput
+                    style={styles.TextInput}
                     placeholder="Password"
                     value={password}
                     onChangeText={setPassword}
                     secureTextEntry
                 />
             </View>
-            <View style={styles.inputView}>
-                <TextInput
-                    style={styles.TextInput}
-                    placeholder="Repeat Password"
-                    value={repeatpassword}
-                    onChangeText={setRepeatPassword}
-                    secureTextEntry
-                />
-            </View>
+            
 
             <TouchableOpacity
-                onPress={() => signUp({ username, password })}
+                onPress={() => signUp({ username, password,email,phone })}
                 style={styles.loginBtn}>
                 <Text style={styles.loginText}>SIGN UP</Text>
             </TouchableOpacity>
