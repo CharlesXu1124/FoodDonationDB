@@ -28,21 +28,35 @@ const SIGN_UP =async (cust_name,credential,cust_email,cust_phone)=>{
     return data
 }
 
-const SEARCH_STORES =async (lat,lng)=>{
-    const {data} = await instance.get('searchRestaurant',{
-        params:{
-            lat,
-            lng
-    }})
+const SEARCH_STORES = async (latitude, longitude, radius) => {
+    const { data } = await instance.post('searchRestaurantByLatLng', {
+        latitude,
+        longitude,
+        radius
+    })
+    return data
+    // .map((item)=>({
+    //     'id':item['rID'],
+    //     'lat':item['latitude'],
+    //     'lng':item['longitude'],
+    //     'name':item['rName'],
+    //     'cuisine':item['Cuisine'],
+    //     'phone':item['phone'],
+    //     'rating': item['rating'],
+    //     'cuisine_qty':item['cuisine_qty'],
+    //     'distance': item['distance'],
+    // }))
 }
 
-const PLACE_ORDER =async (order_quantity,cust_id,rID)=>{
+const PLACE_ORDER =async (order_quantity, cust_id, rID)=>{
 
     const {data} = await instance.post('placeOrder',{
         order_quantity,
         cust_id,
         rID
     })
+
+    return data   
 }
 
 

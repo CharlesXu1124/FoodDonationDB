@@ -26,7 +26,6 @@ app = Flask(__name__)
 cors = CORS(app, resources={
                 r"/signup": {"origins": "*"},
                 r"/login": {"origins": "*"},
-                r"/searchRestaurant": {"origins": "*"},
                 r"/placeOrder": {"origins": "*"},
                 r"/searchRestaurantByLatLng": {"origins": "*"},
                 })
@@ -258,7 +257,7 @@ def searchRestaurantByLatLng():
     user_lon = request.json["longitude"]
     radius = request.json["radius"]
 
-
+    print(user_lat,user_lon,radius)
 
     drivers = [item for item in pyodbc.drivers()]
     driver = drivers[-1]
@@ -273,7 +272,7 @@ def searchRestaurantByLatLng():
 
 
     list_of_restaurants = []
-    query_string = "select rName, rCuisine, rPhone, rAddress, rRating, rLatitude, rLongitude from [dbo].[Restaurant];"
+    query_string = "select rID, rName, rCuisine, rPhone, rRating, rLatitude, rLongitude, cuisine_qty from [dbo].[Restaurant];"
     print("Executing query: %s" % query_string)
     cursor.execute(query_string)
     row = cursor.fetchone()
@@ -284,16 +283,18 @@ def searchRestaurantByLatLng():
         target_lon = float(row[6])
         distance = calc_distance(user_lat, user_lon, target_lat, target_lon)
 
+
         # add the restaurants within search range to the list
         if distance < radius:
             list_of_restaurants.append({
-                'rName': row[0],
-                'Cuisine': row[1],
-                'phone': row[2],
-                'Address': row[3],
+                'id':row[0],
+                'name': row[1],
+                'cuisine': row[2],
+                'phone': row[3],
                 'rating': str(row[4]),
-                'latitude': float(row[5]),
-                'longitude': float(row[6]),
+                'lat': float(row[5]),
+                'lng': float(row[6]),
+                'quantity':int(row[7])
                 'distance': distance
             })
         row = cursor.fetchone()

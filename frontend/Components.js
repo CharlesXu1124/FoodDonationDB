@@ -6,14 +6,22 @@ import Toast from 'react-native-toast-message';
 import { Feather } from '@expo/vector-icons';
 import styles from './styles';
 import { Foundation } from '@expo/vector-icons'; 
-import {PLACE_ORDER} from './api';
+import NumericInput from 'react-native-numeric-input'
+import {PLACE_ORDER,SEARCH_STORES} from './api';
 
 const StoreDetail = ({ route, navigation }) => {
+    const [orderQuantity, setOrderQuantity] = useState(1)
+
     console.log(route, navigation)
     const { state } = useContext(AppContext);
     console.log(state);
     const {userToken:{cus_id,cus_name}} = state
-    const { params: { name,id,cuisine,phone,address,rating,quantity } } = route
+    const { params: { name,
+        id,
+        cuisine,
+        phone,
+        rating,
+        quantity } } = route
     const placeOrder = (quantity) => {
         //API: place order
         PLACE_ORDER(quantity,cus_id,id)
@@ -52,8 +60,15 @@ const StoreDetail = ({ route, navigation }) => {
                 Remaining quantity: {quantity}    
                 </Text>
             </View>
+            <View>
+                <NumericInput type='up-down'
+                    minValue={1}
+                    maxValue = {quantity} 
+                    value={orderQuantity}
+                    onChange={setOrderQuantity} />
+            </View>
             <TouchableOpacity
-                onPress={() => placeOrder(1)}
+                onPress={() => placeOrder(orderQuantity)}
                 style={styles.loginBtn}>
                 <Text style={styles.loginText}>Place Order</Text>
             </TouchableOpacity>
@@ -62,95 +77,37 @@ const StoreDetail = ({ route, navigation }) => {
 }
 
 const StoreListView = (props) => {
+    const { state } = useContext(AppContext);
+    const {location:{lat,lng}} = state
+
     const [stores, setStores] = useState([])
     useEffect(() => {
         const loadData = async () => {
-            //TODO: API: store list
-
-            setStores(
-                [{
-                    name: "name2",
-                    lat: 59.95,
-                    lng: 30.33,
-                    id: "123123"
-                }, {
-                    name: "name3",
-                    lat: 59.961,
-                    lng: 30.3409,
-                    id: "2345246"
-                }, {
-                    name: "name3",
-                    lat: 59.961,
-                    lng: 30.3409,
-                    id: "2345244"
-                }, {
-                    name: "name3",
-                    lat: 59.961,
-                    lng: 30.3409,
-                    id: "2345243"
-                }, {
-                    name: "name3",
-                    lat: 59.961,
-                    lng: 30.3409,
-                    id: "2345242"
-                }, {
-                    name: "name3",
-                    lat: 59.961,
-                    lng: 30.3409,
-                    id: "2345241"
-                }, {
-                    name: "name3",
-                    lat: 59.961,
-                    lng: 30.3409,
-                    id: "23452555"
-                }, {
-                    name: "name3",
-                    lat: 59.961,
-                    lng: 30.3409,
-                    id: "23452455"
-                }, {
-                    name: "name5",
-                    lat: 59.961,
-                    lng: 30.3409,
-                    id: "234524622"
-                }, {
-                    name: "name1",
-                    lat: 59.961,
-                    lng: 30.3409,
-                    id: "2345234622"
-                }, {
-                    name: "name4",
-                    lat: 59.961,
-                    lng: 30.3409,
-                    id: "145234622"
-                }]
-            )
+            //API: store list
+            stores = SEARCH_STORES(lat,lng)
+            setStores(stores)
         }
         loadData()
     }, [])
 
-    const StoreItem = ({ lat, lng, id, name, }) => (<TouchableOpacity
+    const StoreItem = (store) => (<TouchableOpacity
         style={styles.listItem}
-        lat={lat}
-        lng={lng}
-        key={id}
-        onPress={() => props.navigation.navigate('Store Detail', { name, id, lat, lng })} >
+        lat={store.lat}
+        lng={store.lng}
+        key={store.id}
+        onPress={() => props.navigation.navigate('Store Detail', store)} >
         <View>
             <Text>
-                {name}
+                {store.name} 
+                Cuisine: {store.cuisine} 
             </Text>
         </View>
         <View>
             <Text>
-                Address abc st
+                Address: {store.address}
+                Distance: {store.distance/1000}km
             </Text>
         </View>
-        <View>
-            <Text>
-                Stock: xxxx
-            </Text>
-        </View>
-
     </TouchableOpacity>)
 
     const renderItem = ({ item }) => (
@@ -171,12 +128,10 @@ const StoreListView = (props) => {
 
 const StoreMapView = (props) => {
     const defaultProps = {
-        center: {
-            lat: 59.95,
-            lng: 30.33
-        },
         zoom: 11
     };
+    const { state } = useContext(AppContext);
+    const {location} = state
 
     const [stores, setStores] = useState([])
 
@@ -194,21 +149,11 @@ const StoreMapView = (props) => {
 
     useEffect(() => {
         const loadData = async () => {
-            //TODO: API: store list
+            //TODO:  store list
+            const dStores = SEARCH_STORES(location.lat,location.lng,10000)
 
-            setStores(
-                [{
-                    name: "name2xxxxxxx",
-                    lat: 59.95,
-                    lng: 30.33,
-                    id: 123123
-                }, {
-                    name: "name3",
-                    lat: 59.961,
-                    lng: 30.3409,
-                    id: 2345246
-                }]
-            )
+            setStores(dStores)
+
         }
         loadData()
     }, [])
@@ -218,10 +163,10 @@ const StoreMapView = (props) => {
 
             <GoogleMapReact
                 bootstrapURLKeys={{ key: 'AIzaSyAA7iIEFkFfDYAoxIJRFsWjn6OzvhUhwI8' }}
-                defaultCenter={defaultProps.center}
+                defaultCenter={location}
                 defaultZoom={defaultProps.zoom}>
                 {
-                    stores.map(store =>
+                    stores.length >0 && stores.map(store =>
                         <StoreMarker {...store} key={store.id} {...props} />)
                 }
             </GoogleMapReact>
