@@ -28,12 +28,12 @@ const SIGN_UP =async (cust_name,credential,cust_email,cust_phone)=>{
     return data
 }
 
-const SEARCH_STORES =async (lat,lng)=>{
-    const {data} = await instance.get('searchRestaurant',{
-        params:{
-            lat,
-            lng
-    }})
+const SEARCH_STORES = async (latitude, longitude, radius) => {
+    const { data } = await instance.post('searchRestaurantByLatLng', {
+        latitude,
+        longitude,
+        radius
+    })
     return data
 }
 

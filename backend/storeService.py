@@ -26,7 +26,6 @@ app = Flask(__name__)
 cors = CORS(app, resources={
                 r"/signup": {"origins": "*"},
                 r"/login": {"origins": "*"},
-                r"/searchRestaurant": {"origins": "*"},
                 r"/placeOrder": {"origins": "*"},
                 r"/searchRestaurantByLatLng": {"origins": "*"},
                 })
@@ -258,7 +257,7 @@ def searchRestaurantByLatLng():
     user_lon = request.json["longitude"]
     radius = request.json["radius"]
 
-
+    print(user_lat,user_lon,radius)
 
     drivers = [item for item in pyodbc.drivers()]
     driver = drivers[-1]
@@ -298,7 +297,7 @@ def searchRestaurantByLatLng():
             })
         row = cursor.fetchone()
 
-    return (jsonify(list_of_restaurants))
+    return (jsonify([]))
 
 
 if __name__ == "__main__":

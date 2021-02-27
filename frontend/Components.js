@@ -151,7 +151,7 @@ const StoreMapView = (props) => {
     useEffect(() => {
         const loadData = async () => {
             //TODO:  store list
-            const dStores = SEARCH_STORES(location.lat,location.lng)
+            const dStores = SEARCH_STORES(location.lat,location.lng,10000)
 
             setStores(dStores)
 
@@ -167,7 +167,7 @@ const StoreMapView = (props) => {
                 defaultCenter={location}
                 defaultZoom={defaultProps.zoom}>
                 {
-                    stores.map(store =>
+                    stores.length >0 && stores.map(store =>
                         <StoreMarker {...store} key={store.id} {...props} />)
                 }
             </GoogleMapReact>
