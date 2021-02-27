@@ -23,7 +23,8 @@ import pyodbc
 # cursor = conn.cursor()
 
 app = Flask(__name__)
-cors = CORS(app, resources={r"/signup": {"origins": "*"}})
+cors = CORS(app, resources={r"/signup": {"origins": "*"},
+                r"/login": {"origins": "*"}})
 app.config['CORS_HEADERS'] = 'Content-Type'
 
 
@@ -47,70 +48,77 @@ def random_string_lower_case(length):
 def index():
     return 'invalid call'
 
-
-@app.route('/login', methods=['GET', 'POST'])
+@app.route('/login', methods=['GET', 'POST','OPTIONS'])
+@cross_origin(origin='*',headers=['Content-Type','Authorization'])
 def login():
-    email = request.args.get('email')
-    password = request.args.get('password')
 
-    print("Executing query..........")
+    password = request.json['password']
+    email = request.json['email']
 
-    query_string = "select credential from [dbo].[Customers] where [dbo].[Customers].cust_email='{0}'".format(email)
+    print("Executing query..........",password,email)
+
+    query_string = "select credential,cust_id from [dbo].[Customers] where [dbo].[Customers].cust_email='{0}'".format(email)
     cursor.execute(query_string)
     row = cursor.fetchone()
 
-    credential = str(row[0])
+    credential,cus_id = str(row[0]),str(row[1])
 
     if credential == password:
+        return jsonify({'cus_id':cus_id,'success':True})
 
-        print("Login successful!!!")
-        return "Login successful!!!"
+        # print("Login successful!!!")
+        # return "Login successful!!!"
     else:
-        return "Login failed, check username and password"
+        return jsonify({'success':False})
 
+        # return "Login failed, check username and password"
+
+
+
+
+'''
+function for handling user signup request
+'''
 @app.route('/signup', methods=['GET', 'POST','OPTIONS'])
 @cross_origin(origin='*',headers=['Content-Type','Authorization'])
 def signup():
-    print(request.data)
-    # data = request.data
-    # loaded_json = json.loads(data)
-    # print(loaded_json)
-    # cust_name = loaded_json["cust_name"]
-    # cust_email = loaded_json["cust_email"]
-    # cust_phone = loaded_json["cust_phone"]
-    # credential = loaded_json["credential"]
+    cust_name = request.json["cust_name"]
+    cust_email = request.json["cust_email"]
+    cust_phone = request.json["cust_phone"]
+    credential = request.json["credential"]
+    # # randomly generate customer ID during signup
+    cust_id = random_string_lower_case(64)
 
-    # drivers = [item for item in pyodbc.drivers()]
-    # driver = drivers[-1]
-    # print("driver:{}".format(driver))
+    print("Executing query..........",cust_name,cust_email,cust_phone,credential,cust_id)
 
-    # server = 'ubuntu1.database.windows.net'
-    # database = 'DB1'
-    # username = 'admin1'
-    # password = 'Pwned_2023'
-    # driver = '{ODBC Driver 17 for SQL Server}'
-    # # print(response.json())
 
-    # result_from_database = []
+    drivers = [item for item in pyodbc.drivers()]
+    driver = drivers[-1]
+    print("driver:{}".format(driver))
 
-    # with pyodbc.connect(
-    #         'DRIVER=' + driver + ';SERVER=' + server + ';\
-    #             PORT=1433;DATABASE=' + database + ';\
-    #                 UID=' + username + ';\
-    #                     PWD=' + password) as conn:
-    #     with conn.cursor() as cursor:
-    #         cursor.execute("INSERT INTO [dbo].[Customers] \
-    #              (cust_id, cust_name, cust_email, cust_phone, credential) \
-    #                  VALUES ('%s', '%s', '%s', '%s', '%s');" % (cust_id, cust_name, cust_email, cust_phone, credential))
-    #         # cursor.execute("SELECT * FROM [dbo].[Customers];")
-    #         conn.commit()
-    #         # row = cursor.fetchone()
+    server = 'ubuntu1.database.windows.net'
+    database = 'DB1'
+    username = 'admin1'
+    password = 'Pwned_2023'
+    driver = '{ODBC Driver 17 for SQL Server}'
+    print(response.json())
 
-    #         while row is not None:
-    #             result_from_database.append(row)
-    #             row = cursor.fetchone()
-    #         print(result_from_database)
-    return jsonify({'cus_id':"1231235423"})
+    result_from_database = []
+
+    with pyodbc.connect(
+            'DRIVER=' + driver + ';SERVER=' + server + ';\
+                PORT=1433;DATABASE=' + database + ';\
+                    UID=' + username + ';\
+                        PWD=' + password) as conn:
+        with conn.cursor() as cursor:
+            cursor.execute("INSERT INTO [dbo].[Customers] \
+                 (cust_id, cust_name, cust_email, cust_phone, credential) \
+                     VALUES ('%s', '%s', '%s', '%s', '%s');" % (cust_id, cust_name, cust_email, cust_phone, credential))
+            # cursor.execute("SELECT * FROM [dbo].[Customers];")
+            conn.commit()
+    return jsonify({'cus_id':cust_id,'success':True})
+            
+    # return "account created successfully"
 
 
 @app.route('/searchRestaurant', methods=['GET', 'POST'])

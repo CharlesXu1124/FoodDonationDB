@@ -8,18 +8,24 @@ const instance = axios.create({
     timeout: 20000
   });
 
-const LOG_IN =async (email,password)=>{
-    const response = await instance.post('login',{
+const SIGN_IN =async (email,password)=>{
+    const {data} = await instance.post('login',{
         email,
         password
     })
+    return data
+
 }
 
-const SIGN_UP =async (email,password)=>{
-    const response = await instance.post('signup',{
-        email,
-        password
+const SIGN_UP =async (cust_name,credential,cust_email,cust_phone)=>{
+
+    const {data} = await instance.post('signup',{
+        cust_name,
+        credential,
+        cust_email,
+        cust_phone
     })
+    return data
 }
 
 const SEARCH_STORES =async (lat,lng)=>{
@@ -32,7 +38,7 @@ const SEARCH_STORES =async (lat,lng)=>{
 
 const PLACE_ORDER =async (order_quantity,cust_id,rID)=>{
 
-    const response = await instance.post('placeOrder',{
+    const {data} = await instance.post('placeOrder',{
         order_quantity,
         cust_id,
         rID
@@ -40,4 +46,4 @@ const PLACE_ORDER =async (order_quantity,cust_id,rID)=>{
 }
 
 
-export {LOG_IN,SIGN_UP,SEARCH_STORES,PLACE_ORDER};
+export {SIGN_IN,SIGN_UP,SEARCH_STORES,PLACE_ORDER};

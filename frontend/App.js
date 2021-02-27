@@ -21,7 +21,7 @@ import { createStackNavigator } from '@react-navigation/stack';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import AppContext from './AppContext';
 import Toast from 'react-native-toast-message';
-import {SIGN_UP, LOG_IN} from './api'
+import {SIGN_UP, SIGN_IN} from './api'
 
 
 
@@ -42,15 +42,18 @@ export default function App() {
             isLoading: false,
           };
         case 'SIGN_IN':
+        case 'SIGN_UP':
           return {
             ...prevState,
             isSignout: false,
+            isLoading: false,
             userToken: action.token,
           };
         case 'SIGN_OUT':
           return {
             ...prevState,
             isSignout: true,
+            isLoading: false,
             userToken: null,
           };
       }
@@ -76,33 +79,36 @@ export default function App() {
 
   const authContext = useMemo(
     () => ({
-      signIn: async ({username,password}) => {
+      
+      signIn: async ({ email, password }) => {
         // In a production app, we need to send some data (usually username, password) to server and get a token
         // We will also need to handle errors if sign in failed
         // After getting token, we need to persist the token using `AsyncStorage`
         // In the example, we'll use a dummy token
         //TODO: API: sign in
-        userData = await SIGN_UP(username,password)
+        const userData = await SIGN_IN(email, password)
+        console.log(userData)
 
-        AsyncStorage.setItem('userData', data)
+        AsyncStorage.setItem('userData', JSON.stringify(userData))
 
-        dispatch({ type: 'SIGN_IN', token: data });
+        dispatch({ type: 'SIGN_IN', token: userData });
       },
       signOut: () => {
         AsyncStorage.setItem('userData', null)
         dispatch({ type: 'SIGN_OUT' })
       },
-      signUp: async ({username,password})  => {
+      signUp: async ({ username, password,email,phone })  => {
         // In a production app, we need to send user data to server and get a token
         // We will also need to handle errors if sign up failed
         // After getting token, we need to persist the token using `AsyncStorage`
         // In the example, we'll use a dummy token
         //TODO: API: sign up
-        userData = await SIGN_UP(username,password)
+        const userData = await SIGN_UP(username, password,email,phone)
+        console.log(userData)
         
-        AsyncStorage.setItem('userData', data)
+        AsyncStorage.setItem('userData', JSON.stringify(userData))
 
-        dispatch({ type: 'SIGN_IN', token: 'dummy-auth-token' });
+        dispatch({ type: 'SIGN_UP', token: userData });
       },
     }),
     []
