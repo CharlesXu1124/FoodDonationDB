@@ -297,7 +297,10 @@ def searchRestaurantByLatLng():
                 'distance': distance
             })
         row = cursor.fetchone()
-
+        
+    # sort the returned restaurants according to their proximity to the user
+    list_of_restaurants.sort(key = lambda json: json['distance'], reverse=False)
+    
     return (jsonify(list_of_restaurants))
 
 
