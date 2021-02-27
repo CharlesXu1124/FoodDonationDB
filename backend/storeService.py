@@ -28,6 +28,7 @@ cors = CORS(app, resources={
                 r"/login": {"origins": "*"},
                 r"/searchRestaurant": {"origins": "*"},
                 r"/placeOrder": {"origins": "*"},
+                r"/searchRestaurantByLatLng": {"origins": "*"},
                 })
 app.config['CORS_HEADERS'] = 'Content-Type'
 
@@ -46,7 +47,19 @@ def random_digits(length):
 def random_string_lower_case(length):
     pool = string.ascii_lowercase + string.digits
     return ''.join(random.choice(pool) for i in range(length))
+'''
+helper function for calculating the distance between two geocoordinates
+'''
+def calc_distance(user_lat, user_lon, target_lat, target_lon):
+    r = 6371e3
+    user_lat_radian = user_lat * math.pi / 180
+    target_lat_radian = target_lat * math.pi / 180
+    d_lat = (target_lat - user_lat) * math.pi / 180
+    d_lon = (target_lon - user_lon) * math.pi / 180
 
+    a = (math.sin(d_lat / 2))**2 + math.cos(user_lat_radian) * math.cos(target_lat_radian) * math.sin(d_lon / 2) * math.sin(d_lon / 2)
+    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1-a))
+    return r * c
 
 @app.route('/')
 def index():
@@ -86,51 +99,63 @@ function for handling user signup request
 @app.route('/signup', methods=['GET', 'POST','OPTIONS'])
 @cross_origin(origin='*',headers=['Content-Type','Authorization'])
 def signup():
+    # randomly generate customer ID during signup
+    cust_id = random_string_lower_case(64)
+
     cust_name = request.json["cust_name"]
     cust_email = request.json["cust_email"]
     cust_phone = request.json["cust_phone"]
     credential = request.json["credential"]
-    # # randomly generate customer ID during signup
-    cust_id = random_string_lower_case(64)
-
-    print("Executing query..........",cust_name,cust_email,cust_phone,credential,cust_id)
 
 
-    # drivers = [item for item in pyodbc.drivers()]
-    # driver = drivers[-1]
-    # print("driver:{}".format(driver))
 
-    # server = 'ubuntu1.database.windows.net'
-    # database = 'DB1'
-    # username = 'admin1'
-    # password = 'Pwned_2023'
-    # driver = '{ODBC Driver 17 for SQL Server}'
+    drivers = [item for item in pyodbc.drivers()]
+    driver = drivers[-1]
+    print("driver:{}".format(driver))
+
+    server = 'ubuntu1.database.windows.net'
+    database = 'DB1'
+    username = 'admin1'
+    password = 'Pwned_2023'
+    driver = '{ODBC Driver 17 for SQL Server}'
     # print(response.json())
 
-    # result_from_database = []
-
-    # with pyodbc.connect(
-    #         'DRIVER=' + driver + ';SERVER=' + server + ';\
-    #             PORT=1433;DATABASE=' + database + ';\
-    #                 UID=' + username + ';\
-    #                     PWD=' + password) as conn:
-    #     with conn.cursor() as cursor:
-    #         cursor.execute("INSERT INTO [dbo].[Customers] \
-    #              (cust_id, cust_name, cust_email, cust_phone, credential) \
-    #                  VALUES ('%s', '%s', '%s', '%s', '%s');" % (cust_id, cust_name, cust_email, cust_phone, credential))
-    #         # cursor.execute("SELECT * FROM [dbo].[Customers];")
-    #         conn.commit()
-    return jsonify({'cus_id':cust_id,'success':True,'cus_name':cust_name})
+    with pyodbc.connect(
+            'DRIVER=' + driver + ';SERVER=' + server + ';\
+                PORT=1433;DATABASE=' + database + ';\
+                    UID=' + username + ';\
+                        PWD=' + password) as conn:
+        with conn.cursor() as cursor:
+            cursor.execute("INSERT INTO [dbo].[Customers] \
+                 (cust_id, cust_name, cust_email, cust_phone, credential) \
+                     VALUES ('%s', '%s', '%s', '%s', '%s');" % (cust_id, cust_name, cust_email, cust_phone, credential))
+            # cursor.execute("SELECT * FROM [dbo].[Customers];")
+            conn.commit()
             
-    # return "account created successfully"
+    return jsonify({'cust_id':cust_id,'success':True,'cust_name':cust_name})
 
+'''
+function for handling restaurant search request
+'''
 @cross_origin(origin='*',headers=['Content-Type','Authorization'])
 @app.route('/searchRestaurant', methods=['GET'])
 def searchRestaurant():
-    zipcode = request.args.get('zipcode')
+    zipcode = request.json['zipcode']
+
+    drivers = [item for item in pyodbc.drivers()]
+    driver = drivers[-1]
+    server = 'ubuntu1.database.windows.net'
+    database = 'DB1'
+    username = 'admin1'
+    password = 'Pwned_2023'
+    driver = '{ODBC Driver 17 for SQL Server}'
+    conn = pyodbc.connect(
+        'DRIVER=' + driver + ';SERVER=' + server + ';PORT=1433;DATABASE=' + database + ';UID=' + username + ';PWD=' + password)
+    cursor = conn.cursor()
+
 
     list_of_restaurants = []
-    query_string = "select rID, rName, rCuisine, rPhone, rAddress, rRating, cuisine_qty  from [dbo].[Restaurant] where rAddress LIKE '%" + zipcode + "%'"
+    query_string = "select rName, rCuisine, rPhone, rAddress, rRating  from [dbo].[Restaurant] where rAddress LIKE '%" + zipcode + "%'"
     print(query_string)
     cursor.execute(query_string)
     row = cursor.fetchone()
@@ -142,18 +167,15 @@ def searchRestaurant():
 
     results = {}
     final_results = []
-    for index, tuple in enumerate(list_of_restaurants):
-        results['rID'] = tuple[0]
-        results['rName'] = tuple[1]
-        results['Cuisine'] = tuple[2]
-        results['phone'] = tuple[3]
-        results['Address'] = tuple[4]
-        results['rating'] = str(tuple[5])
-        results['quantity'] = str(tuple[6])
+    for _, tuple in enumerate(list_of_restaurants):
+        results['rName'] = tuple[0]
+        results['Cuisine'] = tuple[1]
+        results['phone'] = tuple[2]
+        results['Address'] = tuple[3]
+        results['rating'] = str(tuple[4])
         final_results.append(results)
 
     return (jsonify(final_results))
-
 
 @cross_origin(origin='*',headers=['Content-Type','Authorization'])
 @app.route('/placeOrder', methods=[ 'POST'])
@@ -222,6 +244,58 @@ def placeOrder():
             conn.commit()
 
     return jsonify({'success':True})
+  
+'''
+restaurant search function by user latitude and longitude, and search radius
+'''
+@cross_origin(origin='*',headers=['Content-Type','Authorization'])
+@app.route('/searchRestaurantByLatLng', methods=[ 'POST'])
+def searchRestaurantByLatLng():
+    user_lat = request.json["latitude"]
+    user_lon = request.json["longitude"]
+    radius = request.json["radius"]
+
+
+
+    drivers = [item for item in pyodbc.drivers()]
+    driver = drivers[-1]
+    server = 'ubuntu1.database.windows.net'
+    database = 'DB1'
+    username = 'admin1'
+    db_password = 'Pwned_2023'
+    driver = '{ODBC Driver 17 for SQL Server}'
+    conn = pyodbc.connect(
+        'DRIVER=' + driver + ';SERVER=' + server + ';PORT=1433;DATABASE=' + database + ';UID=' + username + ';PWD=' + db_password)
+    cursor = conn.cursor()
+
+
+    list_of_restaurants = []
+    query_string = "select rName, rCuisine, rPhone, rAddress, rRating, rLatitude, rLongitude from [dbo].[Restaurant];"
+    print("Executing query: %s" % query_string)
+    cursor.execute(query_string)
+    row = cursor.fetchone()
+
+
+    while row is not None:
+        target_lat = float(row[5])
+        target_lon = float(row[6])
+        distance = calc_distance(user_lat, user_lon, target_lat, target_lon)
+
+        # add the restaurants within search range to the list
+        if distance < radius:
+            list_of_restaurants.append({
+                'rName': row[0],
+                'Cuisine': row[1],
+                'phone': row[2],
+                'Address': row[3],
+                'rating': str(row[4]),
+                'latitude': float(row[5]),
+                'longitude': float(row[6]),
+                'distance': distance
+            })
+        row = cursor.fetchone()
+
+    return (jsonify(list_of_restaurants))
 
 
 if __name__ == "__main__":
