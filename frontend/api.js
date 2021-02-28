@@ -1,7 +1,7 @@
 
 const axios = require('axios');
-// const BASE_URL ="http://13.66.196.147:5000/"
-const BASE_URL ="http://0.0.0.0:5000/"
+const BASE_URL ="http://fooddonationdb.westus2.cloudapp.azure.com:5000/"
+// const BASE_URL ="http://0.0.0.0:5000/"
 
 const instance = axios.create({
     baseURL: BASE_URL,
