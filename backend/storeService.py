@@ -279,8 +279,8 @@ def searchRestaurantByLatLng():
 
 
     while row is not None:
-        target_lat = float(row[5])
-        target_lon = float(row[6])
+        target_lat = float(row[6])
+        target_lon = float(row[7])
         distance = calc_distance(user_lat, user_lon, target_lat, target_lon)
 
 
