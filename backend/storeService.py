@@ -294,7 +294,7 @@ def searchRestaurantByLatLng():
                 'rating': str(row[4]),
                 'lat': float(row[5]),
                 'lng': float(row[6]),
-                'quantity':int(row[7])
+                'quantity':int(row[7]),
                 'distance': distance
             })
         row = cursor.fetchone()
