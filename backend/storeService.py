@@ -11,22 +11,13 @@ from flask import request,jsonify
 from flask_cors import CORS, cross_origin
 import pyodbc
 
-# drivers = [item for item in pyodbc.drivers()]
-# driver = drivers[-1]
-# server = 'ubuntu1.database.windows.net'
-# database = 'DB1'
-# username = 'admin1'
-# password = 'Pwned_2023'
-# driver = '{ODBC Driver 17 for SQL Server}'
-# conn = pyodbc.connect(
-#     'DRIVER=' + driver + ';SERVER=' + server + ';PORT=1433;DATABASE=' + database + ';UID=' + username + ';PWD=' + password)
-# cursor = conn.cursor()
 
 app = Flask(__name__)
 cors = CORS(app, resources={
                 r"/signup": {"origins": "*"},
                 r"/login": {"origins": "*"},
                 r"/placeOrder": {"origins": "*"},
+                r"/placeOrderWithTrigger": {"origins": "*"},
                 r"/searchRestaurantByLatLng": {"origins": "*"},
                 })
 app.config['CORS_HEADERS'] = 'Content-Type'
@@ -246,6 +237,91 @@ def placeOrder():
             conn.commit()
 
     return jsonify({'success':True})
+
+  
+'''
+function for handling order placing request
+'''
+@cross_origin(origin='*',headers=['Content-Type','Authorization'])
+@app.route('/placeOrderWithTrigger', methods=[ 'POST'])
+def placeOrderWithTrigger():
+    order_id = random_string(64)
+    order_quantity = request.json["order_quantity"]
+    cust_id = request.json["cust_id"]
+    rID = request.json["rID"]
+
+    drivers = [item for item in pyodbc.drivers()]
+    driver = drivers[-1]
+    print("driver:{}".format(driver))
+
+    server = 'ubuntu1.database.windows.net'
+    database = 'DB1'
+    username = 'admin1'
+    password = 'Pwned_2023'
+    driver = '{ODBC Driver 17 for SQL Server}'
+
+    if order_quantity < 1:
+        return jsonify({'success': False, 'info': 'invalid transaction'})
+
+    with pyodbc.connect(
+            'DRIVER=' + driver + ';SERVER=' + server + ';\
+                PORT=1433;DATABASE=' + database + ';\
+                    UID=' + username + ';\
+                        PWD=' + password) as conn:
+        with conn.cursor() as cursor:
+            cursor.execute("SELECT cuisine_qty FROM [dbo].[Restaurant] WHERE rID = '%s';" % (rID))
+            # cursor.execute("SELECT * FROM [dbo].[Customers];")
+
+            row = cursor.fetchone()[0]
+
+            if row is not None:
+                print(row)
+
+            if row < order_quantity:
+                return jsonify({'success': False, 'info': 'not enough food'})
+    
+    # update order trigger
+    with pyodbc.connect(
+            'DRIVER=' + driver + ';SERVER=' + server + ';\
+                PORT=1433;DATABASE=' + database + ';\
+                    UID=' + username + ';\
+                        PWD=' + password) as conn:
+        with conn.cursor() as cursor:
+            query = "CREATE TRIGGER order_trigger ON [dbo].[Restaurant] AFTER UPDATE AS BEGIN IF 1 > 0 INSERT INTO [dbo].[Orders]  (order_id, order_quantity, cust_id, rID) VALUES ('%s', %d, '%s','%s') END;" % (order_id, order_quantity, cust_id, rID)
+            print("executing query: %s" % query)
+            cursor.execute(query)
+            # cursor.execute("SELECT * FROM [dbo].[Customers];")
+            conn.commit()
+
+    quantity_remaining = row - order_quantity
+    with pyodbc.connect(
+            'DRIVER=' + driver + ';SERVER=' + server + ';\
+                PORT=1433;DATABASE=' + database + ';\
+                    UID=' + username + ';\
+                        PWD=' + password) as conn:
+        with conn.cursor() as cursor:
+            query = "UPDATE [dbo].[Restaurant] \
+                SET cuisine_qty = %d FROM [dbo].[Restaurant] WHERE RID = '%s';" % (quantity_remaining, rID)
+            print("executing query: %s" % query)
+            cursor.execute(query)
+            # cursor.execute("SELECT * FROM [dbo].[Customers];")
+            conn.commit()
+
+    # drop the trigger so it won't interfere with the food resupply
+    with pyodbc.connect(
+            'DRIVER=' + driver + ';SERVER=' + server + ';\
+                PORT=1433;DATABASE=' + database + ';\
+                    UID=' + username + ';\
+                        PWD=' + password) as conn:
+        with conn.cursor() as cursor:
+            query = 'DROP TRIGGER IF EXISTS order_trigger;'
+            cursor.execute(query)
+            # cursor.execute("SELECT * FROM [dbo].[Customers];")
+            conn.commit()
+
+
+    return jsonify({'success':True})
+  
   
 '''
 restaurant search function by user latitude and longitude, and search radius
