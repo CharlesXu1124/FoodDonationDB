@@ -35,22 +35,22 @@ const SEARCH_STORES = async (latitude, longitude, radius) => {
         radius
     })
     return data
-    // .map((item)=>({
-    //     'id':item['rID'],
-    //     'lat':item['latitude'],
-    //     'lng':item['longitude'],
-    //     'name':item['rName'],
-    //     'cuisine':item['Cuisine'],
-    //     'phone':item['phone'],
-    //     'rating': item['rating'],
-    //     'cuisine_qty':item['cuisine_qty'],
-    //     'distance': item['distance'],
-    // }))
+
+}
+
+const SEARCH_POPULAR = async (latitude, longitude, radius) => {
+    const { data } = await instance.post('searchMostPopularRestaurants', {
+        latitude,
+        longitude,
+        radius
+    })
+    return data
+
 }
 
 const PLACE_ORDER =async (order_quantity, cust_id, rID)=>{
 
-    const {data} = await instance.post('placeOrder',{
+    const {data} = await instance.post('placeOrderWithTrigger',{
         order_quantity,
         cust_id,
         rID
@@ -59,5 +59,18 @@ const PLACE_ORDER =async (order_quantity, cust_id, rID)=>{
     return data   
 }
 
+const STORE_REPORT =async (month,year) =>{
+    const {data} = await instance.post('getOrderNumbers',{
+        month,
+        year
+    })
 
-export {SIGN_IN,SIGN_UP,SEARCH_STORES,PLACE_ORDER};
+    return data['results']  
+} 
+
+
+export {SIGN_IN,SIGN_UP,
+    SEARCH_STORES,
+    SEARCH_POPULAR,
+    STORE_REPORT,
+    PLACE_ORDER};

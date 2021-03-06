@@ -10,6 +10,20 @@ const styles = StyleSheet.create({
         justifyContent: "center",
     },
 
+    detailContainer: {
+        padding:"10px",
+        flex: 1,
+        backgroundColor: "#fff",
+    },
+    
+
+    listPage: {
+        flex: 1,
+        backgroundColor: "#fff",
+        alignItems: "left",
+        justifyContent: "center",
+    },
+
     image: {
         marginBottom: 40,
     },
@@ -46,13 +60,24 @@ const styles = StyleSheet.create({
         marginTop: 40,
         backgroundColor: "#FF1493",
     },
+    plcBtn:{
+        width: "60%",
+        borderRadius: 25,
+        height: 50,
+        marginLeft: "auto",
+        
+        alignItems: "center",
+        justifyContent: "center",
+        backgroundColor: "#FF1493",        
+    },
     loginText: {
         color:"#EEE",
     },
     listContainer:{
         width: "97%",
-
+        height:"90%"
     },
+
 
     listItem: {
         width: "100%",
@@ -76,8 +101,8 @@ const styles = StyleSheet.create({
         backgroundColor: '#FFF',
         borderColor: "#DEE",
         borderWidth: 2,
+        width:"60px",
         height: '25px',
-        width: '90px',
         alignSelf: 'flex-start',
         borderRadius: 15,
         alignItems: "center",

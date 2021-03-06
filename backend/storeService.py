@@ -4,32 +4,55 @@ import json
 import numpy as np
 import random
 import string
-import datetime
 import json
 from flask import Flask
 from flask import request,jsonify
 from flask_cors import CORS, cross_origin
+import math
 import pyodbc
+from timeloop import Timeloop
+from datetime import timedelta
 
-# drivers = [item for item in pyodbc.drivers()]
-# driver = drivers[-1]
-# server = 'ubuntu1.database.windows.net'
-# database = 'DB1'
-# username = 'admin1'
-# password = 'Pwned_2023'
-# driver = '{ODBC Driver 17 for SQL Server}'
-# conn = pyodbc.connect(
-#     'DRIVER=' + driver + ';SERVER=' + server + ';PORT=1433;DATABASE=' + database + ';UID=' + username + ';PWD=' + password)
-# cursor = conn.cursor()
+tl = Timeloop()
 
 app = Flask(__name__)
 cors = CORS(app, resources={
                 r"/signup": {"origins": "*"},
                 r"/login": {"origins": "*"},
                 r"/placeOrder": {"origins": "*"},
+                r"/placeOrderWithTrigger": {"origins": "*"},
                 r"/searchRestaurantByLatLng": {"origins": "*"},
+                r"/searchMostPopularRestaurants": {"origins": "*"},
+                r"/searchRestaurantByLatLngv2" : {"origins": "*"},
+                r"/getOrderNumbers" : {"origins": "*"},
                 })
 app.config['CORS_HEADERS'] = 'Content-Type'
+
+'''
+increment amount of food reserve in each restaurant periodically
+'''
+@tl.job(interval=timedelta(seconds=900))
+def produce_food():
+    query = '''
+    UPDATE [dbo].[Restaurant]
+    SET cuisine_qty = cuisine_qty + 1;
+    '''
+    drivers = [item for item in pyodbc.drivers()]
+    driver = drivers[-1]
+    server = 'ubuntu1.database.windows.net'
+    database = 'DB1'
+    username = 'admin1'
+    db_password = 'Pwned_2023'
+    driver = '{ODBC Driver 17 for SQL Server}'
+    conn = pyodbc.connect(
+        'DRIVER=' + driver + ';SERVER=' + server + ';PORT=1433;DATABASE=' + database + ';UID=' + username + ';PWD=' + db_password)
+    cursor = conn.cursor()
+    cursor.execute(query)
+    
+    conn.commit()
+    print("Updating food bank..........")
+    print(query)
+
 
 
 # helper function for generating random hashes
@@ -46,6 +69,7 @@ def random_digits(length):
 def random_string_lower_case(length):
     pool = string.ascii_lowercase + string.digits
     return ''.join(random.choice(pool) for i in range(length))
+
 '''
 helper function for calculating the distance between two geocoordinates
 '''
@@ -60,37 +84,52 @@ def calc_distance(user_lat, user_lon, target_lat, target_lon):
     c = 2 * math.atan2(math.sqrt(a), math.sqrt(1-a))
     return r * c
 
+
+
 @app.route('/')
 def index():
     return 'invalid call'
 
+
+'''
+function for handling user login authentication request
+'''
 @app.route('/login', methods=['GET', 'POST','OPTIONS'])
 @cross_origin(origin='*',headers=['Content-Type','Authorization'])
 def login():
-
-    password = request.json['password']
+    user_password = request.json['password']
     email = request.json['email']
 
-    print("Executing query..........",password,email)
+    drivers = [item for item in pyodbc.drivers()]
+    driver = drivers[-1]
+    server = 'ubuntu1.database.windows.net'
+    database = 'DB1'
+    username = 'admin1'
+    db_password = 'Pwned_2023'
+    driver = '{ODBC Driver 17 for SQL Server}'
+    conn = pyodbc.connect(
+        'DRIVER=' + driver + ';SERVER=' + server + ';PORT=1433;DATABASE=' + database + ';UID=' + username + ';PWD=' + db_password)
+    cursor = conn.cursor()
 
-    query_string = "select credential,cust_id,cus_name from [dbo].[Customers] where [dbo].[Customers].cust_email='{0}'".format(email)
+    print("Executing query..........")
+
+    query_string = "select credential, cust_id, cust_name from [dbo].[Customers] where [dbo].[Customers].cust_email='{0}'".format(email)
+
+    print("executing: %s" % query_string)
     cursor.execute(query_string)
     row = cursor.fetchone()
+    if row is not None:
+        credential,cus_id,cus_name = str(row[0]),str(row[1]),str(row[2])
+    else:
+        return jsonify({'success':False})
 
-    credential,cus_id,cus_name = str(row[0]),str(row[1]),str(row[2])
-
-    if credential == password:
+    if credential == user_password:
         return jsonify({'cus_id':cus_id,'success':True,'cus_name':cus_name})
 
         # print("Login successful!!!")
         # return "Login successful!!!"
     else:
         return jsonify({'success':False})
-
-        # return "Login failed, check username and password"
-
-
-
 
 '''
 function for handling user signup request
@@ -133,49 +172,11 @@ def signup():
             
     return jsonify({'cust_id':cust_id,'success':True,'cust_name':cust_name})
 
+
+
 '''
-function for handling restaurant search request
+function for handling order placing request
 '''
-@cross_origin(origin='*',headers=['Content-Type','Authorization'])
-@app.route('/searchRestaurant', methods=['GET'])
-def searchRestaurant():
-    zipcode = request.json['zipcode']
-
-    drivers = [item for item in pyodbc.drivers()]
-    driver = drivers[-1]
-    server = 'ubuntu1.database.windows.net'
-    database = 'DB1'
-    username = 'admin1'
-    password = 'Pwned_2023'
-    driver = '{ODBC Driver 17 for SQL Server}'
-    conn = pyodbc.connect(
-        'DRIVER=' + driver + ';SERVER=' + server + ';PORT=1433;DATABASE=' + database + ';UID=' + username + ';PWD=' + password)
-    cursor = conn.cursor()
-
-
-    list_of_restaurants = []
-    query_string = "select rName, rCuisine, rPhone, rAddress, rRating  from [dbo].[Restaurant] where rAddress LIKE '%" + zipcode + "%'"
-    print(query_string)
-    cursor.execute(query_string)
-    row = cursor.fetchone()
-
-    while row is not None:
-        list_of_restaurants.append(row)
-        row = cursor.fetchone()
-    print(list_of_restaurants)
-
-    results = {}
-    final_results = []
-    for _, tuple in enumerate(list_of_restaurants):
-        results['rName'] = tuple[0]
-        results['Cuisine'] = tuple[1]
-        results['phone'] = tuple[2]
-        results['Address'] = tuple[3]
-        results['rating'] = str(tuple[4])
-        final_results.append(results)
-
-    return (jsonify(final_results))
-
 @cross_origin(origin='*',headers=['Content-Type','Authorization'])
 @app.route('/placeOrder', methods=[ 'POST'])
 def placeOrder():
@@ -183,9 +184,6 @@ def placeOrder():
     order_quantity = request.json["order_quantity"]
     cust_id = request.json["cust_id"]
     rID = request.json["rID"]
-
-    print("Placing order",order_id,order_quantity,cust_id,rID)
-
 
     drivers = [item for item in pyodbc.drivers()]
     driver = drivers[-1]
@@ -196,7 +194,7 @@ def placeOrder():
     username = 'admin1'
     password = 'Pwned_2023'
     driver = '{ODBC Driver 17 for SQL Server}'
-    
+
     if order_quantity < 1:
         return jsonify({'success': False, 'info': 'invalid transaction'})
 
@@ -246,7 +244,92 @@ def placeOrder():
             conn.commit()
 
     return jsonify({'success':True})
-  
+
+
+'''
+function for handling order placing request
+'''
+@cross_origin(origin='*',headers=['Content-Type','Authorization'])
+@app.route('/placeOrderWithTrigger', methods=[ 'POST'])
+def placeOrderWithTrigger():
+    order_id = random_string(64)
+    order_quantity = request.json["order_quantity"]
+    cust_id = request.json["cust_id"]
+    rID = request.json["rID"]
+
+    drivers = [item for item in pyodbc.drivers()]
+    driver = drivers[-1]
+    print("driver:{}".format(driver))
+
+    server = 'ubuntu1.database.windows.net'
+    database = 'DB1'
+    username = 'admin1'
+    password = 'Pwned_2023'
+    driver = '{ODBC Driver 17 for SQL Server}'
+
+    if order_quantity < 1:
+        return jsonify({'success': False, 'info': 'invalid transaction'})
+
+    with pyodbc.connect(
+            'DRIVER=' + driver + ';SERVER=' + server + ';\
+                PORT=1433;DATABASE=' + database + ';\
+                    UID=' + username + ';\
+                        PWD=' + password) as conn:
+        with conn.cursor() as cursor:
+            cursor.execute("SELECT cuisine_qty FROM [dbo].[Restaurant] WHERE rID = '%s';" % (rID))
+            # cursor.execute("SELECT * FROM [dbo].[Customers];")
+
+            row = cursor.fetchone()[0]
+
+            if row is not None:
+                print(row)
+
+            if row < order_quantity:
+                return jsonify({'success': False, 'info': 'not enough food'})
+    
+    # update order trigger
+    with pyodbc.connect(
+            'DRIVER=' + driver + ';SERVER=' + server + ';\
+                PORT=1433;DATABASE=' + database + ';\
+                    UID=' + username + ';\
+                        PWD=' + password) as conn:
+        with conn.cursor() as cursor:
+            query = "CREATE TRIGGER order_trigger ON [dbo].[Restaurant] AFTER UPDATE AS BEGIN IF 1 > 0 INSERT INTO [dbo].[Orders]  (order_id, order_quantity, cust_id, rID) VALUES ('%s', %d, '%s','%s') END;" % (order_id, order_quantity, cust_id, rID)
+            print("executing query: %s" % query)
+            cursor.execute(query)
+            # cursor.execute("SELECT * FROM [dbo].[Customers];")
+            conn.commit()
+
+    quantity_remaining = row - order_quantity
+    with pyodbc.connect(
+            'DRIVER=' + driver + ';SERVER=' + server + ';\
+                PORT=1433;DATABASE=' + database + ';\
+                    UID=' + username + ';\
+                        PWD=' + password) as conn:
+        with conn.cursor() as cursor:
+            query = "UPDATE [dbo].[Restaurant] \
+                SET cuisine_qty = %d FROM [dbo].[Restaurant] WHERE RID = '%s';" % (quantity_remaining, rID)
+            print("executing query: %s" % query)
+            cursor.execute(query)
+            # cursor.execute("SELECT * FROM [dbo].[Customers];")
+            conn.commit()
+
+    # drop the trigger so it won't interfere with the food resupply
+    with pyodbc.connect(
+            'DRIVER=' + driver + ';SERVER=' + server + ';\
+                PORT=1433;DATABASE=' + database + ';\
+                    UID=' + username + ';\
+                        PWD=' + password) as conn:
+        with conn.cursor() as cursor:
+            query = 'DROP TRIGGER IF EXISTS order_trigger;'
+            cursor.execute(query)
+            # cursor.execute("SELECT * FROM [dbo].[Customers];")
+            conn.commit()
+
+
+    return jsonify({'success':True})
+
+
 '''
 restaurant search function by user latitude and longitude, and search radius
 '''
@@ -257,7 +340,7 @@ def searchRestaurantByLatLng():
     user_lon = request.json["longitude"]
     radius = request.json["radius"]
 
-    print(user_lat,user_lon,radius)
+
 
     drivers = [item for item in pyodbc.drivers()]
     driver = drivers[-1]
@@ -272,7 +355,7 @@ def searchRestaurantByLatLng():
 
 
     list_of_restaurants = []
-    query_string = "select rID, rName, rCuisine, rPhone, rRating, rLatitude, rLongitude, cuisine_qty from [dbo].[Restaurant];"
+    query_string = "select rID, rName, rCuisine, rPhone, cuisine_qty, rRating, rLatitude, rLongitude from [dbo].[Restaurant];"
     print("Executing query: %s" % query_string)
     cursor.execute(query_string)
     row = cursor.fetchone()
@@ -283,27 +366,174 @@ def searchRestaurantByLatLng():
         target_lon = float(row[7])
         distance = calc_distance(user_lat, user_lon, target_lat, target_lon)
 
-
         # add the restaurants within search range to the list
         if distance < radius:
+
             list_of_restaurants.append({
                 'id':row[0],
                 'name': row[1],
                 'cuisine': row[2],
                 'phone': row[3],
-                'rating': str(row[4]),
-                'lat': float(row[5]),
-                'lng': float(row[6]),
-                'quantity':int(row[7]),
-                'distance': distance
+                'rating': str(row[5]),
+                'quantity': int(row[4]),
+                'lng': float(row[7]),
+                'lat':float(row[6]),
+                'distance': int(distance)
             })
         row = cursor.fetchone()
-        
+
     # sort the returned restaurants according to their proximity to the user
     list_of_restaurants.sort(key = lambda json: json['distance'], reverse=False)
-    
+
+    return (jsonify(list_of_restaurants))
+
+# '''
+# return a list of restaurants sorted by popularity
+# '''
+@cross_origin(origin='*',headers=['Content-Type','Authorization'])
+@app.route('/searchMostPopularRestaurants', methods=[ 'POST'])
+def searchMostPopularRestaurants():
+    user_lat = request.json["latitude"]
+    user_lon = request.json["longitude"]
+    radius = request.json["radius"]
+
+
+    drivers = [item for item in pyodbc.drivers()]
+    driver = drivers[-1]
+    server = 'ubuntu1.database.windows.net'
+    database = 'DB1'
+    username = 'admin1'
+    db_password = 'Pwned_2023'
+    driver = '{ODBC Driver 17 for SQL Server}'
+    conn = pyodbc.connect(
+        'DRIVER=' + driver + ';SERVER=' + server + ';PORT=1433;DATABASE=' + database + ';UID=' + username + ';PWD=' + db_password)
+    cursor = conn.cursor()
+
+
+    list_of_restaurants = []
+    query_string = "select rID, rName, rCuisine, rPhone, cuisine_qty, rRating, rLatitude, rLongitude from [dbo].[Restaurant];"
+    print("Executing query: %s" % query_string)
+    cursor.execute(query_string)
+    row = cursor.fetchone()
+
+
+    while row is not None:
+        target_lat = float(row[6])
+        target_lon = float(row[7])
+        distance = calc_distance(user_lat, user_lon, target_lat, target_lon)
+
+        # add the restaurants within search range to the list
+        if distance < radius:
+
+            list_of_restaurants.append({
+                'id':row[0],
+                'name': row[1],
+                'cuisine': row[2],
+                'phone': row[3],
+                'rating': str(row[5]),
+                'quantity': int(row[4]),
+                'lng': float(row[7]),
+                'lat':float(row[6]),
+                'distance': int(distance),
+                'popularity': float(row[5]) - int(distance) / 5000
+            })
+        row = cursor.fetchone()
+
+    # sort the returned restaurants according to their proximity to the user
+    list_of_restaurants.sort(key = lambda json: json['popularity'], reverse=True)
+
     return (jsonify(list_of_restaurants))
 
 
+'''
+restaurant search function by user latitude and longitude, and search radius (ver. 2.0)
+'''
+@cross_origin(origin='*',headers=['Content-Type','Authorization'])
+@app.route('/searchRestaurantByLatLngv2', methods=[ 'POST'])
+def searchRestaurantByLatLngv2():
+    user_lat = request.json["latitude"]
+    user_lon = request.json["longitude"]
+    radius = request.json["radius"]
+
+    drivers = [item for item in pyodbc.drivers()]
+    driver = drivers[-1]
+    server = 'ubuntu1.database.windows.net'
+    database = 'DB1'
+    username = 'admin1'
+    db_password = 'Pwned_2023'
+    driver = '{ODBC Driver 17 for SQL Server}'
+    conn = pyodbc.connect(
+        'DRIVER=' + driver + ';SERVER=' + server + ';PORT=1433;DATABASE=' + database + ';UID=' + username + ';PWD=' + db_password)
+    cursor = conn.cursor()
+
+
+    list_of_restaurants = []
+    query_string = "select rID, rName, rCuisine, rPhone, cuisine_qty, rRating, rLatitude, rLongitude from [dbo].[Restaurant];"
+    print("Executing query: %s" % query_string)
+    cursor.execute(query_string)
+    row = cursor.fetchone()
+
+
+    while row is not None:
+        target_lat = float(row[6])
+        target_lon = float(row[7])
+        distance = calc_distance(user_lat, user_lon, target_lat, target_lon)
+
+        # add the restaurants within search range to the list
+        if distance < radius:
+
+            list_of_restaurants.append({
+                'id':row[0],
+                'name': row[1],
+                'cuisine': row[2],
+                'phone': row[3],
+                'rating': str(row[5]),
+                'quantity': int(row[4]),
+                'lng': float(row[7]),
+                'lat':float(row[6]),
+                'distance': int(distance)
+            })
+        row = cursor.fetchone()
+
+    # sort the returned restaurants according to their proximity to the user
+    list_of_restaurants.sort(key = lambda json: json['distance'], reverse=False)
+
+    return (jsonify({"success": True, "results": list_of_restaurants}))
+
+
+'''
+restaurant search function by user latitude and longitude, and search radius (ver. 2.0)
+'''
+@cross_origin(origin='*',headers=['Content-Type','Authorization'])
+@app.route('/getOrderNumbers', methods=[ 'POST'])
+def getOrderNumbers():
+    order_month = request.json["month"]
+    order_year = request.json["year"]
+
+    drivers = [item for item in pyodbc.drivers()]
+    driver = drivers[-1]
+    server = 'ubuntu1.database.windows.net'
+    database = 'DB1'
+    username = 'admin1'
+    db_password = 'Pwned_2023'
+    driver = '{ODBC Driver 17 for SQL Server}'
+    conn = pyodbc.connect(
+        'DRIVER=' + driver + ';SERVER=' + server + ';PORT=1433;DATABASE=' + database + ';UID=' + username + ';PWD=' + db_password)
+    cursor = conn.cursor()
+
+    query_string = "EXEC restaurant_report @order_month = %s, @order_year = %s" % (str(order_month), str(order_year))
+    print("Executing query: %s" % query_string)
+    cursor.execute(query_string)
+    report_list = []
+    res = cursor.fetchone()
+
+    while res is not None:
+        report_list.append({"name": res[0], "order": res[1]})
+        res = cursor.fetchone()
+
+    return (jsonify({"success": True, "results": report_list}))
+
+
 if __name__ == "__main__":
+    tl.start(block=False)
     app.run(host='0.0.0.0', port=5000, threaded=True)

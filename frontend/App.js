@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View ,TouchableOpacity} from 'react-native';
 import React, {
   useEffect,
   useMemo,
@@ -8,14 +8,15 @@ import {
   SplashScreen,
   StoreListView,
   StoreMapView,
-  StoreDetail
+  StoreDetail,
+  StoreReport
 } from './Components';
 import{
   SignInScreen,
   SignUpScreen
 
 } from './AuthenticateComponents';
-import { NavigationContainer } from '@react-navigation/native';
+import { NavigationContainer,useNavigation } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import AppContext from './AppContext';
@@ -120,7 +121,10 @@ export default function App() {
         {state.userToken ?
           <Stack.Navigator>
             <Stack.Screen name="Home" component={StoreMapView} />
-            <Stack.Screen name="Store List" component={StoreListView} />
+            <Stack.Screen
+              name="Store List"
+              component={StoreListView} />
+            <Stack.Screen name="Store Report" component={StoreReport} />
             <Stack.Screen name="Store Detail" component={StoreDetail} />
 
           </Stack.Navigator>

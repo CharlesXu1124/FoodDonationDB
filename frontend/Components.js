@@ -7,12 +7,17 @@ import { Feather } from '@expo/vector-icons';
 import styles from './styles';
 import { Foundation } from '@expo/vector-icons'; 
 import NumericInput from 'react-native-numeric-input'
-import {PLACE_ORDER,SEARCH_STORES} from './api';
+import { useNavigation } from '@react-navigation/native'
+
+import {PLACE_ORDER,SEARCH_STORES,SEARCH_POPULAR,STORE_REPORT} from './api';
+import {Collapse,CollapseHeader, CollapseBody, AccordionList} from 'accordion-collapse-react-native';
+
+
 
 const StoreDetail = ({ route, navigation }) => {
     const [orderQuantity, setOrderQuantity] = useState(1)
 
-    console.log(route, navigation)
+
     const { state } = useContext(AppContext);
     console.log(state);
     const {userToken:{cus_id,cus_name}} = state
@@ -28,84 +33,103 @@ const StoreDetail = ({ route, navigation }) => {
         .then(
             ()=>
             Toast.show({
-                text1: 'Hello',
-                text2: 'This is some something 👋'
+                text1: 'Success',
+                text2: 'Order placed!'
             })
         )
 
     }
 
     return (
-        <View style={styles.container}>
-            <View>
+        <View style={styles.detailContainer}>
+            <View style={{ height: "50px" }}>
                 <Text>
-                {name}    
+                    Name: {name}
                 </Text>
             </View>
-            <View>
+            <View style={{ height: "50px" }}>
                 <Text>
-                Cuisine: {cuisine}    
-                </Text>
-                <Text>
-                {rating}    
+                    Cuisine: {cuisine}
                 </Text>
             </View>
-            <View>
+            <View style={{ height: "50px" }}>
                 <Text>
-                Phone Number: {phone}    
+                    Rating: {rating}
                 </Text>
             </View>
-            <View>
+            <View style={{ height: "50px" }}>
                 <Text>
-                Remaining quantity: {quantity}    
+                    Phone Number: {phone}
                 </Text>
             </View>
-            <View>
+            <View style={{ height: "50px" }}>
+                <Text>
+                    Remaining quantity: {quantity}
+                </Text>
+            </View>
+            <View styles={{
+                height: "180px",
+            }}>
+                <Text >
+                    Place order - Number of quantity:
+                </Text>
+
+            </View>
+            <View styles={{
+                flexDirection: "column",
+                alignContent: 'center',
+                paddingTop: "50px",
+                width: "100%"
+            }}>
                 <NumericInput type='up-down'
+                styles={{
+                    width: "20%"
+                }}
                     minValue={1}
-                    maxValue = {quantity} 
+                    maxValue={quantity}
                     value={orderQuantity}
                     onChange={setOrderQuantity} />
+                <TouchableOpacity
+                    onPress={() => placeOrder(orderQuantity)}
+                    style={styles.plcBtn}>
+                    <Text style={styles.loginText}>Place Order</Text>
+                </TouchableOpacity>
             </View>
-            <TouchableOpacity
-                onPress={() => placeOrder(orderQuantity)}
-                style={styles.loginBtn}>
-                <Text style={styles.loginText}>Place Order</Text>
-            </TouchableOpacity>
+
         </View>
     )
 }
 
-const StoreListView = (props) => {
-    const { state } = useContext(AppContext);
-    const {location:{lat,lng}} = state
 
-    const [stores, setStores] = useState([])
+const StoreReport = (props) => {
+    const [report, setReport] = useState([])
     useEffect(() => {
-        const loadData = async () => {
+        const loadReport = async () => {
             //API: store list
-            const stores = SEARCH_STORES(lat,lng)
-            setStores(stores)
+            const data = await STORE_REPORT(3,2021)
+            setReport(data)
         }
-        loadData()
+
+        loadReport()
+
     }, [])
 
-    const StoreItem = (store) => (<TouchableOpacity
-        style={styles.listItem}
-        lat={store.lat}
-        lng={store.lng}
-        key={store.id}
-        onPress={() => props.navigation.navigate('Store Detail', store)} >
+    const StoreItem = (datum) => (<TouchableOpacity
+        style={{
+            flexDirection: 'column',
+            alignContent: 'center'
+        }}
+        key={datum.name}
+         >
         <View>
             <Text>
-                {store.name} 
-                Cuisine: {store.cuisine} 
+                Name: {datum.name} 
+                
             </Text>
         </View>
         <View>
             <Text>
-                Address: {store.address}
-                Distance: {store.distance/1000}km
+                Orders: {datum.order}
             </Text>
         </View>
     </TouchableOpacity>)
@@ -115,19 +139,149 @@ const StoreListView = (props) => {
     );
     // TODO: fetch store list from server
     return (<View style={styles.container}>
-        <FlatList
+
+      <FlatList
             style={styles.listContainer}
-            data={stores}
+            data={report}
             renderItem={renderItem}
-            keyExtractor={item => item.id}
-        />
+            keyExtractor={item => item.name}
+        />    
+    </View>)
+}
+
+const StoreListView = (props) => {
+    const { navigation} = props
+
+    useEffect(() => {
+        navigation.setOptions({
+            headerRight: () => (
+                
+                <TouchableOpacity
+                    style={{
+                        alignItems: 'center',
+                        backgroundColor: '#FFF',
+                        padding: 10
+                    }}
+                    onPress={() => {
+                        console.log(navigation)
+                        navigation.navigate("Store Report")
+                    }}>
+                    <Text> Store Report </Text>
+                </TouchableOpacity>
+            ),
+        });
+    })
+    const { state } = useContext(AppContext);
+    
+    const {location:{lat,lng}} = state
+
+    const [firstExpanded, setFirstExpanded] = useState(true)
+
+    const [stores, setStores] = useState([])
+    const [populars, setPopulars] = useState([])
+    useEffect(() => {
+        const loadData = async () => {
+            //API: store list
+            const stores = await SEARCH_STORES(lat,lng,10000)
+            setStores(stores)
+        }
+        const loadPopulars = async () => {
+            //API: store list
+            const pop = await SEARCH_POPULAR(lat,lng,10000)
+            setPopulars(pop)
+        }
+        loadData()
+        loadPopulars()
+
+    }, [])
+
+    const StoreItem = (store) => (<TouchableOpacity
+        style={styles.listItem}
+        lat={store.lat}
+        lng={store.lng}
+        key={store.id}
+        onPress={() => props.navigation.navigate('Store Detail', store)} >
+        <View style={{
+            flexDirection: 'column',
+            alignContent: 'center'
+        }}>
+            <View
+                style={{
+                    flexDirection: 'row',
+                    alignContent: 'center'
+                }} >
+            <Text style={{ width: "50%", height:"30px" }}>
+                Name: {store.name}
+            </Text>
+            <Text style={{ width: "50%", height:"30px"}}>
+                Cuisine: {store.cuisine}
+            </Text>
+        </View>
+        <View
+            style={{
+                flexDirection: 'row',
+                alignContent: 'center'
+            }}>
+            <Text style={{ width: "50%" }}>
+                Address: {store.address}
+            </Text>
+            <Text style={{ width: "50%" }}>
+                Distance: {store.distance / 1000}km
+            </Text>
+        </View>
+        </View>
+    </TouchableOpacity >)
+
+    const renderItem = ({ item }) => (
+        <StoreItem {...item} />
+    );
+    // TODO: fetch store list from server
+    return (<View style={styles.listPage}>
+        <Collapse isExpanded={firstExpanded} 
+            
+            onToggle={() => setFirstExpanded(!firstExpanded)}>
+            <CollapseHeader>
+                <View>
+                    <Text>Nearest Stores</Text>
+
+                </View>
+            </CollapseHeader>
+            <CollapseBody>
+            <FlatList
+                    style={styles.listContainer}
+                    data={stores}
+                    renderItem={renderItem}
+                    keyExtractor={item => item.id}
+                /> 
+
+                     </CollapseBody>
+        </Collapse>
+        <Collapse isExpanded={!firstExpanded}
+            style={{flex:1}}
+            onToggle={() => setFirstExpanded(!firstExpanded)}>
+            <CollapseHeader>
+                <View>
+
+                    <Text>Most Popular</Text>
+                </View>
+            </CollapseHeader>
+            <CollapseBody>
+                <FlatList
+                    style={styles.listContainer}
+                    data={populars}
+                    renderItem={renderItem}
+                    keyExtractor={item => item.id}
+                />
+            </CollapseBody>
+        </Collapse>
+
 
     </View>)
 }
 
 const StoreMapView = (props) => {
     const defaultProps = {
-        zoom: 11
+        zoom:13
     };
     const { state } = useContext(AppContext);
     const {location} = state
@@ -200,4 +354,5 @@ export {
     StoreListView,
     StoreMapView,
     SplashScreen,
+    StoreReport
 }
