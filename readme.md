@@ -170,7 +170,7 @@ Sample Response:
 
 }
 
-![](RackMultipart20210306-4-1vmd300_html_dd82b515a7ef6208.jpg)
+![](post_icon.JPG)
 
 [**http://fooddonationdb.westus2.cloudapp.azure.com:5000/login**](http://fooddonationdb.westus2.cloudapp.azure.com:5000/login)
 
@@ -201,7 +201,7 @@ Sample response:
 
 }
 
-![](RackMultipart20210306-4-1vmd300_html_dd82b515a7ef6208.jpg)
+![](post_icon.JPG)
 
 [**http://fooddonationdb.westus2.cloudapp.azure.com:5000/placeOrderWithTrigger**](http://fooddonationdb.westus2.cloudapp.azure.com:5000/placeOrderWithTrigger)
 
@@ -231,7 +231,7 @@ Sample response:
 
 }
 
-![](RackMultipart20210306-4-1vmd300_html_dd82b515a7ef6208.jpg)
+![](post_icon.JPG)
 
 [**http://fooddonationdb.westus2.cloudapp.azure.com:5000/searchMostPopularRestaurants**](http://fooddonationdb.westus2.cloudapp.azure.com:5000/searchMostPopularRestaurants)
 
@@ -403,7 +403,7 @@ Sample response:
 
 ]
 
-![](RackMultipart20210306-4-1vmd300_html_dd82b515a7ef6208.jpg)
+![](post_icon.JPG)
 
 [**http://fooddonationdb.westus2.cloudapp.azure.com:5000/searchRestaurantByLatLng**](http://fooddonationdb.westus2.cloudapp.azure.com:5000/searchRestaurantByLatLng)
 
@@ -563,7 +563,7 @@ Sample response:
 
 ]
 
-![](RackMultipart20210306-4-1vmd300_html_dd82b515a7ef6208.jpg)
+![](post_icon.JPG)
 
 [**http://fooddonationdb.westus2.cloudapp.azure.com:5000/getOrderNumbers**](http://fooddonationdb.westus2.cloudapp.azure.com:5000/getOrderNumbers)
 
