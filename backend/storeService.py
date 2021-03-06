@@ -24,6 +24,7 @@ cors = CORS(app, resources={
                 r"/searchRestaurantByLatLng": {"origins": "*"},
                 r"/searchMostPopularRestaurants": {"origins": "*"},
                 r"/searchRestaurantByLatLngv2" : {"origins": "*"},
+                r"/getOrderNumbers" : {"origins": "*"},
                 })
 app.config['CORS_HEADERS'] = 'Content-Type'
 
@@ -499,6 +500,38 @@ def searchRestaurantByLatLngv2():
 
     return (jsonify({"success": True, "results": list_of_restaurants}))
 
+
+'''
+restaurant search function by user latitude and longitude, and search radius (ver. 2.0)
+'''
+@cross_origin(origin='*',headers=['Content-Type','Authorization'])
+@app.route('/getOrderNumbers', methods=[ 'POST'])
+def getOrderNumbers():
+    order_month = request.json["month"]
+    order_year = request.json["year"]
+
+    drivers = [item for item in pyodbc.drivers()]
+    driver = drivers[-1]
+    server = 'ubuntu1.database.windows.net'
+    database = 'DB1'
+    username = 'admin1'
+    db_password = 'Pwned_2023'
+    driver = '{ODBC Driver 17 for SQL Server}'
+    conn = pyodbc.connect(
+        'DRIVER=' + driver + ';SERVER=' + server + ';PORT=1433;DATABASE=' + database + ';UID=' + username + ';PWD=' + db_password)
+    cursor = conn.cursor()
+
+    query_string = "EXEC restaurant_report @order_month = %s, @order_year = %s" % (str(order_month), str(order_year))
+    print("Executing query: %s" % query_string)
+    cursor.execute(query_string)
+    report_list = []
+    res = cursor.fetchone()
+
+    while res is not None:
+        report_list.append({"name": res[0], "order": res[1]})
+        res = cursor.fetchone()
+
+    return (jsonify({"success": True, "results": report_list}))
 
 
 if __name__ == "__main__":
