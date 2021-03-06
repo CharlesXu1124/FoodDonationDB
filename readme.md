@@ -69,11 +69,11 @@ Cust\_phone: customer phone number, used to contact customer
 
 **Schema:**
 
-![](RackMultipart20210306-4-1vmd300_html_dbcbe3b7dc79562f.png)
+![schema](Restaurants.png)
 
 **Entity Relation Diagram:**
 
-![](RackMultipart20210306-4-1vmd300_html_773427afab1f0e61.jpg)
+![ER Diagram](ER.png)
 
 **Data:**
 
@@ -91,7 +91,7 @@ Cust\_phone: customer phone number, used to contact customer
 
 **Backend:**
 
-We will use Azure SQL server as the database to hold the data. We have used Azure VM (4vCPU, 16G RAM) as the backend server and deploy our backend script there. We also have made a REST API that accepts user requests and could directly interact with the Azure database.
+We use Azure SQL server as the database to hold the data. We have used Azure VM (4vCPU, 16G RAM) as the backend server and deploy our backend script there. We also have made a REST API that accepts user requests and could directly interact with the Azure database.
 
 **Functional dependencies:**
 
