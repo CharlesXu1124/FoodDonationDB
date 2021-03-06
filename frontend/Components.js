@@ -84,7 +84,7 @@ const StoreListView = (props) => {
     useEffect(() => {
         const loadData = async () => {
             //API: store list
-            stores = SEARCH_STORES(lat,lng)
+            const stores = SEARCH_STORES(lat,lng)
             setStores(stores)
         }
         loadData()
@@ -125,7 +125,6 @@ const StoreListView = (props) => {
     </View>)
 }
 
-
 const StoreMapView = (props) => {
     const defaultProps = {
         zoom: 11
@@ -150,7 +149,9 @@ const StoreMapView = (props) => {
     useEffect(() => {
         const loadData = async () => {
             //TODO:  store list
-            const dStores = SEARCH_STORES(location.lat,location.lng,10000)
+            const dStores = await SEARCH_STORES(location.lat,location.lng,10000)
+
+            console.log(dStores)
 
             setStores(dStores)
 
@@ -166,8 +167,9 @@ const StoreMapView = (props) => {
                 defaultCenter={location}
                 defaultZoom={defaultProps.zoom}>
                 {
-                    stores.length >0 && stores.map(store =>
-                        <StoreMarker {...store} key={store.id} {...props} />)
+                    stores.length >0 && stores.map(store =>{
+                        console.log(store)
+                        return (<StoreMarker {...store} key={store.id} {...props} />)})
                 }
             </GoogleMapReact>
             <TouchableOpacity
