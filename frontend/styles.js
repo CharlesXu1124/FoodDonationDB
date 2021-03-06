@@ -61,11 +61,10 @@ const styles = StyleSheet.create({
         backgroundColor: "#FF1493",
     },
     plcBtn:{
-        width: "60%",
+        width: "95%",
         borderRadius: 25,
         height: 50,
-        marginLeft: "auto",
-        
+        marginTop:"auto",
         alignItems: "center",
         justifyContent: "center",
         backgroundColor: "#FF1493",        
@@ -101,7 +100,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#FFF',
         borderColor: "#DEE",
         borderWidth: 2,
-        width:"60px",
+        width:"120px",
         height: '25px',
         alignSelf: 'flex-start',
         borderRadius: 15,
